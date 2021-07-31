@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:backrec_flutter/screens/video_player_screen.dart';
+import 'package:backrec_flutter/screens/playback_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -41,18 +41,16 @@ class _RecordedVideoThumbnailState extends State<RecordedVideoThumbnail>
 
   @override
   void initState() {
-    localVideoController = VideoPlayerController.file(File(widget.video!.path));
-    // TODO: implement initState
+    //Onitialize videoController
     super.initState();
-    print("Length: ${widget.video!.name}");
     initVideoPlayer();
-    _controller.forward();
+    _controller.forward(); //start animation
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    localVideoController!.dispose();
+    // localVideoController!.dispose();
     super.dispose();
   }
 
@@ -60,7 +58,7 @@ class _RecordedVideoThumbnailState extends State<RecordedVideoThumbnail>
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        Get.to(() => VideoPlayerScreen(controller: localVideoController!));
+        Get.to(() => PlaybackScreen(video: widget.video!));
       },
       child: Container(
         width: Get.width / 10,
@@ -80,6 +78,9 @@ class _RecordedVideoThumbnailState extends State<RecordedVideoThumbnail>
   }
 
   void initVideoPlayer() async {
+    print("init video player - Getting file: ${widget.video!.name}");
+
+    localVideoController = VideoPlayerController.file(File(widget.video!.path));
     videoPlayerListener = () {
       if (localVideoController != null &&
           localVideoController!.value.size != null) {
