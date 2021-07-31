@@ -1,20 +1,9 @@
-class Player {
-  final String firstName;
-  final String lastName;
-  final int age;
-  final int shirtNumber;
-
-  Player(
-      {required this.firstName,
-      required this.lastName,
-      required this.age,
-      required this.shirtNumber});
-}
+import 'package:backrec_flutter/models/player.dart';
 
 class Team {
   late final String name; // club name
   final int founded; //year
   final List<Player> players;
 
-  Team({required this.name, required this.founded, this.players = const []});
+  Team({this.name = '', this.founded = 0000, this.players = const []});
 }

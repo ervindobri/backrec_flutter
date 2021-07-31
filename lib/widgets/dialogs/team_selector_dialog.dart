@@ -1,6 +1,6 @@
 import 'package:backrec_flutter/constants/global_colors.dart';
 import 'package:backrec_flutter/models/team.dart';
-import 'package:backrec_flutter/widgets/icon_text_button.dart';
+import 'package:backrec_flutter/widgets/buttons/icon_text_button.dart';
 import 'package:backrec_flutter/widgets/team_selector_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';

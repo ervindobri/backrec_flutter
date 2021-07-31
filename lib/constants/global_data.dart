@@ -1,5 +1,5 @@
+import 'package:backrec_flutter/models/player.dart';
 import 'package:backrec_flutter/models/team.dart';
-import 'package:flutter/src/widgets/framework.dart';
 
 class GlobalData {
   static List<Team> teams = [
@@ -47,6 +47,17 @@ class GlobalData {
           firstName: "Jozsika", lastName: "Embolo", age: 20, shirtNumber: 10),
     ]),
   ];
+
+  static List markerTypes = [
+    "GOAL",
+    "ATTEMPT",
+    "FUNNY",
+    "ANALYZE",
+    "SKILL",
+    "TEACHING"
+  ];
+
+  static Duration clipLength  = Duration(seconds: 12);
 
   static List getTeams(String pattern) {
     return teams

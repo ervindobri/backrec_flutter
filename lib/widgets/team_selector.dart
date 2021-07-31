@@ -3,13 +3,14 @@ import 'dart:ui';
 import 'package:backrec_flutter/constants/global_colors.dart';
 import 'package:backrec_flutter/models/team.dart';
 import 'package:backrec_flutter/widgets/dialogs/team_selector_dialog.dart';
-import 'package:backrec_flutter/widgets/icon_text_button.dart';
+import 'package:backrec_flutter/widgets/buttons/icon_text_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:get/get.dart';
 
 class TeamSelector extends StatefulWidget {
-  const TeamSelector({Key? key}) : super(key: key);
+  final TeamSelectionCallback setTeams;
+  const TeamSelector({Key? key, required this.setTeams}) : super(key: key);
 
   @override
   State<TeamSelector> createState() => _TeamSelectorState();
@@ -31,6 +32,7 @@ class _TeamSelectorState extends State<TeamSelector> {
             homeTeam = team1;
             awayTeam = team2;
           });
+          widget.setTeams(homeTeam, awayTeam);
         }), barrierDismissible: false, useSafeArea: false);
       },
       child: ClipRRect(

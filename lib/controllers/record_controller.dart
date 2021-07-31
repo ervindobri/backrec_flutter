@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:backrec_flutter/constants/global_colors.dart';
+import 'package:backrec_flutter/models/marker.dart';
 import 'package:backrec_flutter/screens/record_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -29,12 +30,14 @@ class RecordController extends GetxController with WidgetsBindingObserver {
   late String startRecordTime;
   RxString timePassed = "".obs;
   late Timer recTimer;
+  Duration elapsed = Duration.zero;
 
   Rx<Color> blinkColor = Color(0xfffff).obs;
   RxBool _alreadyRecorded = false.obs;
   RxBool get alreadyRecorded => _alreadyRecorded;
 
   T? _ambiguate<T>(T? value) => value;
+
   @override
   // TODO: implement initialized
   bool get initialized => _initialized;
@@ -60,7 +63,8 @@ class RecordController extends GetxController with WidgetsBindingObserver {
       onNewCameraSelected(backCamera);
       _initializeControllerFuture = controller!.initialize();
     } on CameraException catch (e) {
-      logError(e.code, e.description);
+      // logError(e.code, e.description);
+      print(e.description);
     }
   }
 
@@ -91,6 +95,8 @@ class RecordController extends GetxController with WidgetsBindingObserver {
     int seconds = (hundreds / 100).truncate();
     int minutes = (seconds / 60).truncate();
 
+    elapsed = Duration(
+        minutes: minutes, seconds: seconds, milliseconds: milliseconds);
     String minutesStr = (minutes % 60).toString().padLeft(2, '0');
     String secondsStr = (seconds % 60).toString().padLeft(2, '0');
     return "$minutesStr:$secondsStr".toString();
@@ -155,9 +161,6 @@ class RecordController extends GetxController with WidgetsBindingObserver {
       _showCameraException(e);
     }
     notifyChildrens();
-    // if (mounted) {
-    // setState(() {});
-    // }
   }
 
   void onVideoRecordButtonPressed() {
@@ -222,7 +225,7 @@ class RecordController extends GetxController with WidgetsBindingObserver {
   }
 
   void _showCameraException(CameraException e) {
-    logError(e.code, e.description);
+    // logError(e.code, e.description);
     showInSnackBar('Error: ${e.code}\n${e.description}');
   }
 
@@ -245,9 +248,10 @@ class RecordController extends GetxController with WidgetsBindingObserver {
     Get.showSnackbar(GetBar(titleText: Text(message)));
   }
 
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
+  List<Marker> markers = [];
+
+  /// Save new marker to a collection.
+  void saveMarker(Marker marker) {
+    markers.add(marker);
   }
 }

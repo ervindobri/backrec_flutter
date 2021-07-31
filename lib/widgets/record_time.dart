@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+/// Display a blinking red ellipse and the elapsed time for the current recording session
+///
+/// [blinkColor] sets the color of the blinking ellipse (primaryColor by default)
+///
+/// [timePassed] updates the current value of the Text to be displayed
 class RecordTime extends StatelessWidget {
   const RecordTime({
     Key? key,
-    required this.blinkColor,
+    this.blinkColor = Colors.red,
     required this.timePassed,
   }) : super(key: key);
 

@@ -1,44 +1,17 @@
-import 'dart:typed_data';
-
 import 'package:backrec_flutter/constants/global_colors.dart';
 import 'package:backrec_flutter/controllers/record_controller.dart';
-import 'package:backrec_flutter/main.dart';
-import 'package:backrec_flutter/screens/playback_screen.dart';
-import 'package:backrec_flutter/widgets/record_button.dart';
+import 'package:backrec_flutter/models/team.dart';
+import 'package:backrec_flutter/widgets/buttons/add_marker_button.dart';
+import 'package:backrec_flutter/widgets/buttons/record_button.dart';
 import 'package:backrec_flutter/widgets/record_time.dart';
-import 'package:backrec_flutter/widgets/recorded_thumbnail.dart';
+import 'package:backrec_flutter/widgets/buttons/recorded_thumbnail.dart';
 import 'package:backrec_flutter/widgets/team_selector.dart';
+import 'package:backrec_flutter/widgets/buttons/video_selector_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_feather_icons/flutter_feather_icons.dart';
-import 'package:gallery_saver/gallery_saver.dart';
-import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:video_player/video_player.dart';
-
-/// Returns a suitable camera icon for [direction].
-IconData getCameraLensIcon(CameraLensDirection direction) {
-  switch (direction) {
-    case CameraLensDirection.back:
-      return Icons.camera_rear;
-    case CameraLensDirection.front:
-      return Icons.camera_front;
-    case CameraLensDirection.external:
-      return Icons.camera;
-    default:
-      throw ArgumentError('Unknown lens direction');
-  }
-}
-
-void logError(String code, String? message) {
-  if (message != null) {
-    print('Error: $code\nError Message: $message');
-  } else {
-    print('Error: $code');
-  }
-}
 
 class RecordScreen extends StatefulWidget {
   const RecordScreen({Key? key}) : super(key: key);
@@ -49,15 +22,19 @@ class RecordScreen extends StatefulWidget {
 
 class _RecordScreenState extends State<RecordScreen>
     with WidgetsBindingObserver, TickerProviderStateMixin {
-  bool enableAudio = true;
+  late Team homeTeam, awayTeam;
 
   T? _ambiguate<T>(T? value) => value;
+
   RecordController recordController = Get.put(RecordController());
   final ImagePicker _picker = ImagePicker();
+
   @override
   void initState() {
     super.initState();
     _ambiguate(WidgetsBinding.instance)?.addObserver(this);
+    homeTeam = new Team(founded: 0000, name: '');
+    awayTeam = new Team(founded: 0000, name: '');
   }
 
   @override
@@ -91,50 +68,54 @@ class _RecordScreenState extends State<RecordScreen>
                     alignment: Alignment.topCenter,
                     child: Padding(
                       padding: const EdgeInsets.only(top: 10.0),
-                      child: TeamSelector(),
+                      child: TeamSelector(
+                        setTeams: (home, away) {
+                          setState(() {
+                            homeTeam = home;
+                            awayTeam = away;
+                          });
+                        },
+                      ),
                     ),
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: RecordButton(
-                          onRecord: controller.recordVideo,
-                          recordingStarted: controller.recordingStarted.value),
-                    ),
+                  Positioned(
+                    right: 20,
+                    child: RecordButton(
+                        onRecord: controller.recordVideo,
+                        recordingStarted: controller.recordingStarted.value),
                   ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 20.0, horizontal: 20),
-                      child: controller.alreadyRecorded.value
-                          ? RecordedVideoThumbnail(
-                              video: controller.videoFile.value,
-                            )
-                          : InkWell(
-                              onTap: () async {
-                                final XFile? video = await _picker.pickVideo(
-                                    source: ImageSource.gallery);
-                                print(video!.name);
-                                if (video.name != "") {
-                                  Get.to(() => PlaybackScreen(video: video));
-                                }
-                              },
-                              child: Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: GlobalColors.primaryGrey
-                                          .withOpacity(.4)),
-                                  child: Center(
-                                    child: Icon(FeatherIcons.file,
-                                        color: Colors.white),
-                                  )),
-                            ),
-                    ),
-                  )
+                  Positioned(
+                    right: 20,
+                    bottom: 20,
+                    child: controller.alreadyRecorded.value
+                        ? RecordedVideoThumbnail(
+                            video: controller.videoFile.value,
+                            homeTeam: homeTeam,
+                            awayTeam: awayTeam,
+                          )
+                        : VideoSelectorThumbnail(
+                            picker: _picker,
+                            awayTeam: awayTeam,
+                            homeTeam: homeTeam,
+                          ),
+                  ),
+                  // if (controller.recordingStarted.value)
+                  Positioned(
+                      left: 20,
+                      bottom: 20,
+                      child: Row(
+                        children: [
+                          NewMarkerButton(
+                            endPosition: controller.elapsed,
+                            homeTeam: homeTeam,
+                            awayTeam: awayTeam,
+                            onMarkerConfigured: (marker) {
+                              recordController.saveMarker(marker);
+                              //TODO: feedback with snackbar/toast
+                            },
+                          ),
+                        ],
+                      ))
                 ],
               ),
             );
@@ -152,7 +133,7 @@ class _RecordScreenState extends State<RecordScreen>
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
               return Transform.scale(
-                scale: 1.3,
+                scale: 1,
                 child: CameraPreview(
                   controller.controller!,
                   child: LayoutBuilder(builder:
@@ -170,6 +151,7 @@ class _RecordScreenState extends State<RecordScreen>
             } else {
               return Center(
                 child: CircularProgressIndicator(
+                  backgroundColor: GlobalColors.primaryGrey,
                   color: GlobalColors.primaryRed,
                 ),
               );
