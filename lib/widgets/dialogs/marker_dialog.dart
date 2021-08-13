@@ -46,6 +46,8 @@ class _MarkerDialogState extends State<MarkerDialog> {
   List selectedTypes = [];
   double _rating = 0.0;
   List<Filter> filters = [];
+
+  List<Player> _selectedPlayers = [];
   @override
   void initState() {
     homeTeam = widget.homeTeam;
@@ -95,72 +97,71 @@ class _MarkerDialogState extends State<MarkerDialog> {
                               Padding(
                                 padding: const EdgeInsets.only(right: 10.0),
                                 child: MarkerContainer(
-                                  content: Container(
-                                      child: SingleChildScrollView(
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          height: Get.height / 3,
-                                          child: CupertinoPicker(
-                                              diameterRatio: .85,
-                                              itemExtent: 30,
-                                              magnification: 1.5,
-                                              onSelectedItemChanged: (index) {
-                                                setState(() {
-                                                  player1 = allPlayers
-                                                      .where((element) =>
-                                                          element != player2)
-                                                      .toList()[index];
-                                                });
-                                              },
-                                              children: allPlayers
-                                                  .where((element) =>
-                                                      element != player2)
-                                                  .map((e) => Text(
-                                                        e.firstName +
-                                                            ' ' +
-                                                            e.lastName,
+                                  content: ClipRRect(
+                                    borderRadius: BorderRadius.circular(15),
+                                    child: Container(
+                                        width: 200,
+                                        height: 200,
+                                        child: ListView.builder(
+                                            itemCount: allPlayers.length,
+                                            scrollDirection: Axis.vertical,
+                                            itemBuilder: (_, index) {
+                                              return Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 3.0),
+                                                child: Container(
+                                                  width: Get.width,
+                                                  color: (_selectedPlayers
+                                                          .contains(allPlayers[
+                                                              index]))
+                                                      ? GlobalColors.primaryRed
+                                                      : GlobalColors
+                                                          .primaryGrey,
+                                                  padding: EdgeInsets.all(1.0),
+                                                  child: ListTile(
+                                                    onTap: () {
+                                                      if (_selectedPlayers
+                                                          .contains(allPlayers[
+                                                              index])) {
+                                                        print(
+                                                            "Contains player!");
+                                                        setState(() {
+                                                          _selectedPlayers
+                                                              .remove(
+                                                                  allPlayers[
+                                                                      index]);
+                                                        });
+                                                      } else {
+                                                        if (_selectedPlayers
+                                                                .length <
+                                                            2) {
+                                                          print(
+                                                              "Adding player!");
+                                                          setState(() {
+                                                            _selectedPlayers
+                                                                .add(allPlayers[
+                                                                    index]);
+                                                          });
+                                                        }
+                                                      }
+                                                    },
+                                                    title: Text(
+                                                        allPlayers[index]
+                                                                .firstName +
+                                                            " " +
+                                                            allPlayers[index]
+                                                                .lastName,
                                                         style: Get.textTheme
                                                             .bodyText1!
                                                             .copyWith(
                                                                 color: Colors
-                                                                    .white),
-                                                      ))
-                                                  .toList()),
-                                        ),
-                                        Container(
-                                          height: Get.height / 3,
-                                          // height: 100,
-                                          child: CupertinoPicker(
-                                              diameterRatio: .85,
-                                              itemExtent: 25,
-                                              magnification: 1.5,
-                                              onSelectedItemChanged: (index) {
-                                                setState(() {
-                                                  player2 = allPlayers
-                                                      .where((element) =>
-                                                          element != player1)
-                                                      .toList()[index];
-                                                });
-                                              },
-                                              children: allPlayers
-                                                  .where((element) =>
-                                                      element != player1)
-                                                  .map((e) => Text(
-                                                        e.firstName +
-                                                            ' ' +
-                                                            e.lastName,
-                                                        style: Get.textTheme
-                                                            .bodyText1!
-                                                            .copyWith(
-                                                                color: Colors
-                                                                    .white),
-                                                      ))
-                                                  .toList()),
-                                        ),
-                                      ],
-                                    ),
-                                  )),
+                                                                    .white)),
+                                                  ),
+                                                ),
+                                              );
+                                            })),
+                                  ),
                                 ),
                               ),
                               //teams
@@ -271,7 +272,9 @@ class _MarkerDialogState extends State<MarkerDialog> {
                                           Center(
                                             child: Icon(
                                               FeatherIcons.star,
-                                              color: Colors.white,
+                                              color: _rating > 0
+                                                  ? GlobalColors.primaryRed
+                                                  : Colors.white,
                                               size: 170,
                                             ),
                                           ),

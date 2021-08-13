@@ -10,7 +10,10 @@ import 'package:get/get.dart';
 
 class TeamSelector extends StatefulWidget {
   final TeamSelectionCallback setTeams;
-  const TeamSelector({Key? key, required this.setTeams}) : super(key: key);
+  final Team? initialHome, initialAway;
+  const TeamSelector(
+      {Key? key, required this.setTeams, this.initialHome, this.initialAway})
+      : super(key: key);
 
   @override
   State<TeamSelector> createState() => _TeamSelectorState();
@@ -22,6 +25,11 @@ class _TeamSelectorState extends State<TeamSelector> {
   //TODO: display team names
   Team homeTeam = Team(name: '', founded: 0000),
       awayTeam = Team(name: '', founded: 0000);
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,31 +53,75 @@ class _TeamSelectorState extends State<TeamSelector> {
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 color: GlobalColors.primaryGrey.withOpacity(.4)),
-            child: _teamSelected
-                ? Container()
-                : Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        if (homeTeam.name == '' || awayTeam.name == '')
-                          Icon(FeatherIcons.plusCircle, color: Colors.white),
-                        Text(homeTeam.name == '' ? "Home team" : homeTeam.name,
-                            style: Get.textTheme.bodyText1!.copyWith(
-                              color: Colors.white,
-                            )),
-                        Text("VS",
-                            style: Get.textTheme.bodyText2!
-                                .copyWith(color: Colors.white)),
-                        Text(awayTeam.name == '' ? "Away team" : awayTeam.name,
-                            style: Get.textTheme.bodyText1!.copyWith(
-                              color: Colors.white,
-                            )),
-                      ],
-                    ),
-                  ),
+            child: getTeams(),
           ),
         ),
       ),
     );
+  }
+
+  getTeams() {
+    if (homeTeam.name == '' || awayTeam.name == '') {
+      if (widget.initialHome!.name != '' && widget.initialAway!.name != '') {
+        return Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Text(widget.initialHome!.name,
+                  style: Get.textTheme.bodyText1!.copyWith(
+                    color: Colors.white,
+                  )),
+              Text("VS",
+                  style:
+                      Get.textTheme.bodyText2!.copyWith(color: Colors.white)),
+              Text(widget.initialAway!.name,
+                  style: Get.textTheme.bodyText1!.copyWith(
+                    color: Colors.white,
+                  )),
+            ],
+          ),
+        );
+      } else {
+        return Container(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Icon(FeatherIcons.plusCircle, color: Colors.white),
+              Text("Home team",
+                  style: Get.textTheme.bodyText1!.copyWith(
+                    color: Colors.white,
+                  )),
+              Text("VS",
+                  style:
+                      Get.textTheme.bodyText2!.copyWith(color: Colors.white)),
+              Text("Away team",
+                  style: Get.textTheme.bodyText1!.copyWith(
+                    color: Colors.white,
+                  )),
+            ],
+          ),
+        );
+      }
+    } else {
+      return Container(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            if (homeTeam.name == '' || awayTeam.name == '')
+              Icon(FeatherIcons.plusCircle, color: Colors.white),
+            Text(homeTeam.name == '' ? "Home team" : homeTeam.name,
+                style: Get.textTheme.bodyText1!.copyWith(
+                  color: Colors.white,
+                )),
+            Text("VS",
+                style: Get.textTheme.bodyText2!.copyWith(color: Colors.white)),
+            Text(awayTeam.name == '' ? "Away team" : awayTeam.name,
+                style: Get.textTheme.bodyText1!.copyWith(
+                  color: Colors.white,
+                )),
+          ],
+        ),
+      );
+    }
   }
 }

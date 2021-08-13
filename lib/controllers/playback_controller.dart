@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
-
+import 'dart:math' as math;
+import 'package:backrec_flutter/models/marker.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -15,6 +16,12 @@ class PlaybackController extends GetxController {
   // ValueNotifier<Duration>(Duration(seconds: 0));
   VoidCallback? videoPlayerListener;
   RxBool _isPlaying = false.obs;
+
+  Duration lastDuration = Duration.zero;
+
+  Duration currentPosition = Duration.zero;
+
+  RxList markers = [].obs;
   bool get isPlaying => _isPlaying.value;
 
   PlaybackController({
@@ -23,7 +30,6 @@ class PlaybackController extends GetxController {
     hasVolume = false,
   }) {
     initVideoPlayer(video, looping, hasVolume);
-    elapsed.value = localController.value.position;
   }
   get totalDuration => localController.value.duration;
 
@@ -45,11 +51,14 @@ class PlaybackController extends GetxController {
     await localController.initialize();
     localController.setVolume(hasVolume ? 1.0 : 0.0); //TODO: remove after debug
     onPlay();
+    elapsed.value = localController.value.position;
   }
 
   void onSeek(Duration duration) async {
     // print("Duration: $duration");
     await localController.seekTo(duration);
+    lastDuration = duration;
+    print(lastDuration);
   }
 
   void onPlay() async {
@@ -66,5 +75,45 @@ class PlaybackController extends GetxController {
   void onClose() {
     localController.dispose();
     super.onClose();
+  }
+
+  /// Play will resume from beginning of marker.
+  void onMarkerTap(Duration position) {
+    onSeek(position);
+    onPlay();
+    print("Marker play: $position");
+  }
+
+  /// Find the closest marker end position to the elapsed time, jump to that markers end position
+  void jumpToPreviousMarker() {
+    var closest = markers.reduce((a, b) =>
+        (a.endPosition.inMilliseconds - elapsed.value.inMilliseconds).abs() <
+                (b.endPosition.inMilliseconds - elapsed.value.inMilliseconds)
+                    .abs()
+            ? a
+            : b);
+    print(closest.startPosition);
+    if (closest.endPosition != Duration.zero) {
+      onMarkerTap(closest.startPosition);
+    }
+  }
+
+  /// Find the closest marker end position to the elapsed time, jump to that markers end position
+  void jumpToNextMarker() {
+    Marker firstMarker = markers.firstWhere(
+        (element) => element.startPosition > elapsed.value,
+        orElse: () => Marker());
+    if (firstMarker.endPosition != Duration.zero) {
+      onMarkerTap(firstMarker.startPosition);
+    }
+  }
+
+  /// Playback jumping from marker to marker
+  void markerPlayback() {
+    //TODO: play videos jumping from marker to marker
+  }
+
+  void saveMarker(Marker marker) {
+    markers.add(marker);
   }
 }

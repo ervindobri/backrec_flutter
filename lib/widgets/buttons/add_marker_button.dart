@@ -16,7 +16,7 @@ class NewMarkerButton extends StatelessWidget {
       // required this.controller,
       required this.homeTeam,
       required this.awayTeam,
-      required this.endPosition, 
+      required this.endPosition,
       required this.onMarkerConfigured})
       : super(key: key);
 
@@ -48,10 +48,13 @@ class NewMarkerButton extends StatelessWidget {
                     padding: const EdgeInsets.all(8.0),
                     child: Icon(FeatherIcons.plusCircle, color: Colors.white),
                   ),
-                  Text(
-                    "Marker",
-                    style:
-                        Get.textTheme.bodyText1!.copyWith(color: Colors.white),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "Marker",
+                      style: Get.textTheme.bodyText1!
+                          .copyWith(color: Colors.white),
+                    ),
                   ),
                 ],
               ),

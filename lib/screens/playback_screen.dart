@@ -1,13 +1,18 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:backrec_flutter/constants/global_colors.dart';
 import 'package:backrec_flutter/controllers/playback_controller.dart';
+import 'package:backrec_flutter/controllers/record_controller.dart';
+import 'package:backrec_flutter/controllers/toast_controller.dart';
+import 'package:backrec_flutter/models/marker.dart';
 import 'package:backrec_flutter/models/team.dart';
+import 'package:backrec_flutter/widgets/buttons/add_marker_button.dart';
+import 'package:backrec_flutter/widgets/marker_progress.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -29,9 +34,16 @@ class PlaybackScreen extends StatefulWidget {
 }
 
 class _PlaybackScreenState extends State<PlaybackScreen> {
-  late PlaybackController playbackController = Get.put(PlaybackController(
-      video: widget.video, hasVolume: true //set the player volume
-      ));
+  late PlaybackController playbackController = Get.find();
+  List<Marker> markers = [];
+
+  @override
+  void initState() {
+    playbackController.localController.setVolume(1.0);
+    playbackController.markers.value = Get.find<RecordController>().markers;
+    print("Markers: ${markers.length}");
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,12 +57,15 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
               return Stack(
                 children: [
                   VideoPlayer(controller.localController),
+                  //back
                   Container(
                     width: Get.width,
                     height: Get.height * .1,
                     child: InkWell(
                         onTap: () {
                           Get.back();
+                          Get.find<RecordController>().markers.clear();
+                          controller.localController.setVolume(0.0);
                         },
                         child: Row(
                           children: [
@@ -71,58 +86,90 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                     bottom: 0,
                     child: Container(
                       width: Get.width,
-                      height: 130,
-                      color: Colors.black12,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10.0, vertical: 5.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            //actions - prev, next marker
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                InkWell(
-                                  onTap: () {
-                                    //TODO: prev marker, jump to that time (-12 sec)
-                                  },
-                                  child: Container(
-                                    width: 35,
-                                    height: 35,
-                                    decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: GlobalColors.primaryRed),
-                                    child: Center(
-                                      child: Icon(FeatherIcons.skipBack,
-                                          color: Colors.white),
+                      height: 150,
+                      padding: const EdgeInsets.symmetric(vertical: 5.0),
+                      child: Stack(
+                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          //actions - prev, next marker
+                          Positioned(
+                            bottom: 60,
+                            left: 0,
+                            child: Container(
+                              height: Get.height * .15,
+                              width: Get.width,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      controller.jumpToPreviousMarker();
+                                    },
+                                    child: Container(
+                                      width: 35,
+                                      height: 35,
+                                      decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: GlobalColors.primaryRed),
+                                      child: Center(
+                                        child: Icon(FeatherIcons.skipBack,
+                                            color: Colors.white),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                InkWell(
-                                  onTap: () {
-                                    //TODO: next marker, jump to that time (-12 sec)
-                                  },
-                                  child: Container(
-                                    width: 35,
-                                    height: 35,
-                                    decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: GlobalColors.primaryRed),
-                                    child: Center(
-                                      child: Icon(FeatherIcons.skipForward,
-                                          color: Colors.white),
+                                  Container(
+                                      // color: Colors.black,
+                                      width: Get.width * .8,
+                                      height: 50,
+                                      child: Obx(
+                                        () => Stack(
+                                            children: controller.markers
+                                                .map((e) => MarkerPin(
+                                                    marker: e,
+                                                    totalWidth: Get.width * .8,
+                                                    onMarkerTap: () {
+                                                      controller.onMarkerTap(
+                                                          e.startPosition);
+                                                    },
+                                                    totalDuration:
+                                                        playbackController
+                                                            .localController
+                                                            .value
+                                                            .duration))
+                                                .toList()),
+                                      )),
+                                  InkWell(
+                                    onTap: () {
+                                      controller.jumpToNextMarker();
+                                    },
+                                    child: Container(
+                                      width: 35,
+                                      height: 35,
+                                      decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: GlobalColors.primaryRed),
+                                      child: Center(
+                                        child: Icon(FeatherIcons.skipForward,
+                                            color: Colors.white),
+                                      ),
                                     ),
-                                  ),
-                                )
-                              ],
-                            )
-                            // playback bar with markers on it,
-                            ,
-                            Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: Container(
-                                width: Get.width * .9,
+                                  )
+                                ],
+                              ),
+                            ),
+                          )
+                          // playback bar with markers on it,
+                          ,
+                          Positioned(
+                            bottom: 40,
+                            left: 0,
+                            child: Container(
+                              width: Get.width,
+                              // color: Colors.black,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10.0),
                                 child: Obx(
                                   () => ProgressBar(
                                     progress: controller.elapsed.value,
@@ -139,8 +186,11 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                                 ),
                               ),
                             ),
-                            // bottom action and infos
-                            Row(
+                          ),
+                          // bottom action and infos
+                          Positioned(
+                            bottom: 0,
+                            child: Row(
                               children: [
                                 Obx(
                                   () => AnimatedSwitcher(
@@ -158,36 +208,57 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                                             onPressed: controller.onPause),
                                   ),
                                 ),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 30.0),
+                                  child: Container(
+                                    width: 130,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(widget.homeTeam.name,
+                                            style: Get.textTheme.bodyText1!
+                                                .copyWith(color: Colors.white)),
+                                        Text("VS",
+                                            style: Get.textTheme.bodyText1!
+                                                .copyWith(
+                                                    color: Colors.white,
+                                                    fontWeight:
+                                                        FontWeight.w600)),
+                                        Text(widget.awayTeam.name,
+                                            style: Get.textTheme.bodyText1!
+                                                .copyWith(color: Colors.white)),
+                                      ],
+                                    ),
+                                  ),
+                                )
                               ],
-                            )
-                          ],
-                        ),
+                            ),
+                          )
+                        ],
                       ),
                     ),
                   ),
                   Positioned(
-                      right: 20,
-                      top: 20,
+                      right: 10,
+                      top: 10,
                       child: Tooltip(
                         message: 'Add new marker',
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: Container(
-                              width: 55,
-                              height: 55,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  FeatherIcons.plusCircle,
-                                  size: 35,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
+                        verticalOffset: 30,
+                        decoration: BoxDecoration(
+                            color: GlobalColors.primaryRed,
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Obx(
+                          () => NewMarkerButton(
+                            endPosition: controller.elapsed.value,
+                            homeTeam: widget.homeTeam,
+                            awayTeam: widget.awayTeam,
+                            onMarkerConfigured: (marker) {
+                              controller.saveMarker(marker);
+                              Get.find<ToastController>().showToast(
+                                  "Marker created successfully",
+                                  Icon(Icons.check, color: Colors.white));
+                            },
                           ),
                         ),
                       ))

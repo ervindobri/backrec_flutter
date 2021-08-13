@@ -20,10 +20,13 @@ class MarkerContainer extends StatelessWidget {
           height: Get.width / 3,
           width: Get.width / 3,
           decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: GlobalColors.primaryGrey.withOpacity(.6),
-              border:
-                  Border.all(color: Colors.white.withOpacity(.6), width: 5)),
+            borderRadius: BorderRadius.circular(20),
+            color: GlobalColors.primaryGrey.withOpacity(.6),
+            border: Border.all(
+              color: Colors.white.withOpacity(.6),
+              width: 5,
+            ),
+          ),
           child: content,
         ),
       ),

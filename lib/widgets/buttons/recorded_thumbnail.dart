@@ -26,43 +26,29 @@ class RecordedVideoThumbnail extends StatefulWidget {
 
 class _RecordedVideoThumbnailState extends State<RecordedVideoThumbnail>
     with TickerProviderStateMixin {
-  late PlaybackController playbackController = Get.put(PlaybackController(
-      video: widget.video!, looping: true, hasVolume: false));
-
-  late final AnimationController _controller = AnimationController(
-    duration: const Duration(milliseconds: 300),
-    vsync: this,
-  );
-  late final Animation<Offset> _animation =
-      Tween<Offset>(begin: Offset(0.0, 1.0), end: Offset(0.0, 0.0))
-          .animate(CurvedAnimation(
-    parent: _controller,
-    curve: Curves.elasticIn,
-  ));
+  late PlaybackController playbackController;
 
   @override
   void initState() {
-    //Onitialize videoController
+    playbackController = Get.put(PlaybackController(
+        video: widget.video!, looping: true, hasVolume: false));
+    print("init record thumbnail - ${widget.video!.name}");
     super.initState();
-    _controller.forward(); //start animation
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    // localVideoController!.dispose();
-    super.dispose();
-  }
-
+  //TODO: refresh video to the latest recorded ( controller is already initialized)
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        Get.to(() => PlaybackScreen(
-              video: widget.video!,
-              homeTeam: widget.homeTeam,
-              awayTeam: widget.awayTeam,
-            ));
+        Get.to(
+            () => PlaybackScreen(
+                  video: widget.video!,
+                  homeTeam: widget.homeTeam,
+                  awayTeam: widget.awayTeam,
+                ),
+            fullscreenDialog: true,
+            transition: Transition.downToUp);
       },
       child: GetBuilder<PlaybackController>(
           init: playbackController,
@@ -80,8 +66,8 @@ class _RecordedVideoThumbnailState extends State<RecordedVideoThumbnail>
               child: Padding(
                 padding: const EdgeInsets.all(3.0),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: VideoPlayer(controller.localController),
+                  borderRadius: BorderRadius.circular(5),
+                  child: VideoPlayer(playbackController.localController),
                 ),
               ),
             );

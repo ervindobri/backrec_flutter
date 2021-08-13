@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:backrec_flutter/constants/global_colors.dart';
+import 'package:backrec_flutter/controllers/playback_controller.dart';
 import 'package:backrec_flutter/models/marker.dart';
-import 'package:backrec_flutter/screens/record_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,6 +23,7 @@ class RecordController extends GetxController with WidgetsBindingObserver {
 
   late List<CameraDescription> cameras;
   RxBool _recordingStarted = false.obs;
+
   RxBool get recordingStarted => _recordingStarted;
   RxBool _recordingStopped = false.obs;
   RxBool get recordingStopped => _recordingStopped;
@@ -64,7 +65,7 @@ class RecordController extends GetxController with WidgetsBindingObserver {
       _initializeControllerFuture = controller!.initialize();
     } on CameraException catch (e) {
       // logError(e.code, e.description);
-      print(e.description);
+      // print(e.description);
     }
   }
 
@@ -91,12 +92,13 @@ class RecordController extends GetxController with WidgetsBindingObserver {
         DateTime.fromMillisecondsSinceEpoch(int.parse(startRecordTime));
     final date2 = DateTime.fromMillisecondsSinceEpoch(int.parse(timestamp()));
     final milliseconds = date2.difference(date1).inMilliseconds;
-    int hundreds = (milliseconds / 10).truncate();
-    int seconds = (hundreds / 100).truncate();
+    int seconds = (milliseconds / 1000).truncate();
     int minutes = (seconds / 60).truncate();
 
     elapsed = Duration(
-        minutes: minutes, seconds: seconds, milliseconds: milliseconds);
+        minutes: minutes % 60,
+        seconds: seconds % 60,
+        milliseconds: milliseconds % 60);
     String minutesStr = (minutes % 60).toString().padLeft(2, '0');
     String secondsStr = (seconds % 60).toString().padLeft(2, '0');
     return "$minutesStr:$secondsStr".toString();
@@ -107,6 +109,9 @@ class RecordController extends GetxController with WidgetsBindingObserver {
       onStopButtonPressed();
       _recordingStarted.value = false;
       _recordingStopped.value = true;
+      // print("Markers: ${markers.length}");
+      markers.addAll(currentMarkers);
+      currentMarkers.clear();
     } else {
       onVideoRecordButtonPressed();
       _recordingStarted.value = true;
@@ -165,25 +170,21 @@ class RecordController extends GetxController with WidgetsBindingObserver {
 
   void onVideoRecordButtonPressed() {
     startVideoRecording().then((_) {
-      // if (mounted)
-      // setState(() {
       recTimer = startTimer();
-      _alreadyRecorded.value = false;
-      // });
     });
   }
 
   void onStopButtonPressed() {
     stopVideoRecording().then((file) async {
-      // if (mounted) setState(() {});
       if (file != null) {
-        //TODO: new snackbar/notifier
-        var saved = await GallerySaver.saveVideo(file.path);
+        await GallerySaver.saveVideo(file.path);
         print("stop record - ${file.name}");
-        // setState(() {
         videoFile.value = file;
+        try {
+          Get.find<PlaybackController>().initVideoPlayer(file, true, false);
+        } catch (e) {}
         _alreadyRecorded.value = true;
-        // });
+        update();
       }
     });
   }
@@ -211,11 +212,9 @@ class RecordController extends GetxController with WidgetsBindingObserver {
 
   Future<XFile?> stopVideoRecording() async {
     final CameraController? cameraController = controller;
-
     if (cameraController == null || !cameraController.value.isRecordingVideo) {
       return null;
     }
-
     try {
       return cameraController.stopVideoRecording();
     } on CameraException catch (e) {
@@ -232,7 +231,6 @@ class RecordController extends GetxController with WidgetsBindingObserver {
   Timer startTimer() {
     return Timer.periodic(Duration(seconds: 1), (timer) {
       if (_recordingStopped.value) {
-        // print("Cancelled.");
         timer.cancel();
         return;
       }
@@ -249,9 +247,10 @@ class RecordController extends GetxController with WidgetsBindingObserver {
   }
 
   List<Marker> markers = [];
+  List<Marker> currentMarkers = [];
 
   /// Save new marker to a collection.
   void saveMarker(Marker marker) {
-    markers.add(marker);
+    currentMarkers.add(marker);
   }
 }
