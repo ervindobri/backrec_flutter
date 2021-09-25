@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:ui';
+import 'dart:io';
 
 import 'package:backrec_flutter/constants/global_colors.dart';
-import 'package:backrec_flutter/controllers/playback_controller.dart';
+// import 'package:backrec_flutter/controllers/playback_controller.dart';
 import 'package:backrec_flutter/models/marker.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
+import 'package:path_provider/path_provider.dart';
 
 class RecordController extends GetxController with WidgetsBindingObserver {
   var _initialized;
@@ -40,17 +42,20 @@ class RecordController extends GetxController with WidgetsBindingObserver {
   T? _ambiguate<T>(T? value) => value;
 
   @override
-  // TODO: implement initialized
   bool get initialized => _initialized;
-  late Future<void> _initializeControllerFuture = Future(() {});
+
+  late Future<void> _initializeControllerFuture = Future(() {
+    controller!.initialize();
+  });
   Future<void> get controllerFuture => _initializeControllerFuture;
+
   @override
   void onInit() {
-    super.onInit();
     getCameras();
+    _initialized = true;
+    super.onInit();
     // startRecordTime = timestamp();
     // timePassed.value = calculateTimePassed();
-    _initialized = true;
   }
 
   void getCameras() async {
@@ -62,7 +67,6 @@ class RecordController extends GetxController with WidgetsBindingObserver {
           (element) => element.lensDirection == CameraLensDirection.back);
       // print(backCamera);
       onNewCameraSelected(backCamera);
-      _initializeControllerFuture = controller!.initialize();
     } on CameraException catch (e) {
       // logError(e.code, e.description);
       // print(e.description);
@@ -148,7 +152,8 @@ class RecordController extends GetxController with WidgetsBindingObserver {
       imageFormatGroup: ImageFormatGroup.bgra8888,
     );
     controller = cameraController;
-    controller!.lockCaptureOrientation(DeviceOrientation.landscapeLeft);
+    // controller!.lockCaptureOrientation(DeviceOrientation.landscapeLeft);
+    // controller!.unlockCaptureOrientation();
 
     // If the controller is updated then update the UI.
     cameraController.addListener(() {
@@ -159,7 +164,8 @@ class RecordController extends GetxController with WidgetsBindingObserver {
             'Camera error ${cameraController.value.errorDescription}');
       }
     });
-
+    _initializeControllerFuture = controller!.initialize();
+    update();
     try {
       await cameraController.initialize();
     } on CameraException catch (e) {
@@ -174,17 +180,21 @@ class RecordController extends GetxController with WidgetsBindingObserver {
     });
   }
 
+  void deleteVideo() async {
+    var temp = File(videoFile.value.path);
+    await temp.delete();
+  }
+
   void onStopButtonPressed() {
     stopVideoRecording().then((file) async {
       if (file != null) {
         await GallerySaver.saveVideo(file.path);
-        print("stop record - ${file.name}");
         videoFile.value = file;
         try {
-          Get.find<PlaybackController>().initVideoPlayer(file, true, false);
+          // Get.find<PlaybackController>().initVideoPlayer(file, true, false);
         } catch (e) {}
         _alreadyRecorded.value = true;
-        update();
+        // update();
       }
     });
   }

@@ -1,3 +1,4 @@
+import 'package:backrec_flutter/bloc/playback_bloc.dart';
 import 'package:backrec_flutter/constants/global_colors.dart';
 import 'package:backrec_flutter/controllers/record_controller.dart';
 import 'package:backrec_flutter/controllers/toast_controller.dart';
@@ -11,9 +12,11 @@ import 'package:backrec_flutter/widgets/buttons/video_selector_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:camera/camera.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vibration/vibration.dart';
 
 class RecordScreen extends StatefulWidget {
   const RecordScreen({Key? key}) : super(key: key);
@@ -38,11 +41,22 @@ class _RecordScreenState extends State<RecordScreen>
     _ambiguate(WidgetsBinding.instance)?.addObserver(this);
     homeTeam = new Team(founded: 0000, name: '');
     awayTeam = new Team(founded: 0000, name: '');
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
   }
 
   @override
   void dispose() {
     _ambiguate(WidgetsBinding.instance)?.removeObserver(this);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
     super.dispose();
   }
 
@@ -51,6 +65,7 @@ class _RecordScreenState extends State<RecordScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: GetBuilder<ToastController>(
           init: toastController,
           builder: (toastController) {
@@ -89,29 +104,56 @@ class _RecordScreenState extends State<RecordScreen>
                         Positioned(
                           right: 20,
                           child: RecordButton(
-                              onRecord: () {
-                                controller.recordVideo();
-                                print(homeTeam.name);
-                              },
-                              recordingStarted:
-                                  controller.recordingStarted.value),
+                            onRecord: () {
+                              controller.recordVideo();
+                              // controller.recordingStarted.value =
+                              //     !controller.recordingStarted.value;
+                              Vibration.vibrate(duration: 50);
+                            },
+                            recordingStarted: controller.recordingStarted.value,
+                          ),
                         ),
                         Obx(
                           () => Positioned(
-                            right: 20,
-                            bottom: 20,
-                            child: controller.alreadyRecorded.value
-                                ? RecordedVideoThumbnail(
-                                    video: controller.videoFile.value,
-                                    homeTeam: homeTeam,
-                                    awayTeam: awayTeam,
-                                  )
-                                : VideoSelectorThumbnail(
-                                    picker: _picker,
-                                    awayTeam: awayTeam,
-                                    homeTeam: homeTeam,
-                                  ),
-                          ),
+                              right: 20,
+                              bottom: 20,
+                              child: BlocProvider(
+                                create: (context) =>
+                                    context.read<PlaybackBloc>(),
+                                child: Row(
+                                  children: [
+                                    if (controller.alreadyRecorded.value)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 15.0),
+                                        child: RecordedVideoThumbnail(
+                                          video: controller.videoFile.value,
+                                          homeTeam: homeTeam,
+                                          awayTeam: awayTeam,
+                                          onTap: () async {
+                                            if (controller
+                                                .recordingStarted.value) {
+                                              await controller.recordVideo();
+                                              Vibration.vibrate(duration: 50);
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    VideoSelectorThumbnail(
+                                      picker: _picker,
+                                      awayTeam: awayTeam,
+                                      homeTeam: homeTeam,
+                                      onTap: () async {
+                                        /// If recording started, stop recording and open video from gallery
+                                        if (controller.recordingStarted.value) {
+                                          await controller.recordVideo();
+                                          Vibration.vibrate(duration: 50);
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              )),
                         ),
                         if (controller.recordingStarted.value)
                           Positioned(
@@ -123,6 +165,8 @@ class _RecordScreenState extends State<RecordScreen>
                                     endPosition: controller.elapsed,
                                     homeTeam: homeTeam,
                                     awayTeam: awayTeam,
+                                    onTap: () {},
+                                    onCancel: () {},
                                     onMarkerConfigured: (marker) {
                                       recordController.saveMarker(marker);
                                       toastController.showToast(
@@ -150,27 +194,29 @@ class _RecordScreenState extends State<RecordScreen>
           future: controller.controllerFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              return Transform.scale(
-                scale: 1,
-                child: CameraPreview(
-                  controller.controller!,
-                  child: LayoutBuilder(builder:
-                      (BuildContext context, BoxConstraints constraints) {
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      // onScaleStart: _handleScaleStart,
-                      // onScaleUpdate: _handleScaleUpdate,
-                      onTapDown: (details) =>
-                          controller.onViewFinderTap(details, constraints),
-                    );
-                  }),
-                ),
-              );
+              return AspectRatio(
+                  aspectRatio: controller.controller!.value.aspectRatio,
+                  child: CameraPreview(
+                    controller.controller!,
+                    child: LayoutBuilder(builder:
+                        (BuildContext context, BoxConstraints constraints) {
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        // onScaleStart: _handleScaleStart,
+                        // onScaleUpdate: _handleScaleUpdate,
+                        onTapDown: (details) =>
+                            controller.onViewFinderTap(details, constraints),
+                      );
+                    }),
+                  ));
             } else {
-              return Center(
-                child: CircularProgressIndicator(
-                  backgroundColor: GlobalColors.primaryGrey,
-                  color: GlobalColors.primaryRed,
+              return Container(
+                color: Colors.black,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    backgroundColor: Colors.black,
+                    color: GlobalColors.primaryRed,
+                  ),
                 ),
               );
             }

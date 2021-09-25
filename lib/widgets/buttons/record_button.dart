@@ -37,12 +37,8 @@ class RecordButton extends StatelessWidget {
                   padding: const EdgeInsets.all(3.0),
                   child: AnimatedSwitcher(
                     duration: Duration(milliseconds: 300),
-                    transitionBuilder: (widget, animation) {
-                      return FadeTransition(
-                        opacity: animation.drive(Tween(begin: 0.0, end: 1.0)),
-                        child: widget,
-                      );
-                    },
+                    switchInCurve: Curves.easeInOut,
+                    switchOutCurve: Curves.easeInOut,
                     child: _recordingStarted
                         ? Container(
                             width: 30,

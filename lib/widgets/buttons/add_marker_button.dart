@@ -10,25 +10,31 @@ class NewMarkerButton extends StatelessWidget {
   final Team homeTeam, awayTeam;
   final Duration endPosition;
   final MarkerCallback onMarkerConfigured;
+  final VoidCallback onTap;
+  final VoidCallback onCancel;
 
-  const NewMarkerButton(
-      {Key? key,
-      // required this.controller,
-      required this.homeTeam,
-      required this.awayTeam,
-      required this.endPosition,
-      required this.onMarkerConfigured})
-      : super(key: key);
+  const NewMarkerButton({
+    Key? key,
+    // required this.controller,
+    required this.homeTeam,
+    required this.awayTeam,
+    required this.endPosition,
+    required this.onMarkerConfigured,
+    required this.onTap,
+    required this.onCancel,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
+        onTap();
         Get.dialog(MarkerDialog(
           endPosition: endPosition,
           homeTeam: homeTeam,
           awayTeam: awayTeam,
           onMarkerConfigured: onMarkerConfigured,
+          onCancel: onCancel,
         ));
       },
       child: ClipRRect(

@@ -1,15 +1,19 @@
 import 'dart:math';
-import 'package:backrec_flutter/controllers/playback_controller.dart';
+// import 'package:backrec_flutter/controllers/playback_controller.dart';
+import 'package:backrec_flutter/bloc/record_bloc.dart';
 import 'package:backrec_flutter/models/team.dart';
 import 'package:backrec_flutter/screens/playback_screen.dart';
+import 'package:backrec_flutter/services/record_service.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart' as bloc;
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
 
 class RecordedVideoThumbnail extends StatefulWidget {
   final XFile? video;
   final Team homeTeam, awayTeam;
+  final VoidCallback onTap;
 
   const RecordedVideoThumbnail({
     Key? key,
@@ -18,6 +22,7 @@ class RecordedVideoThumbnail extends StatefulWidget {
     this.video,
     required this.homeTeam,
     required this.awayTeam,
+    required this.onTap,
   }) : super(key: key);
 
   @override
@@ -26,13 +31,13 @@ class RecordedVideoThumbnail extends StatefulWidget {
 
 class _RecordedVideoThumbnailState extends State<RecordedVideoThumbnail>
     with TickerProviderStateMixin {
-  late PlaybackController playbackController;
+  // late PlaybackController playbackController;
 
   @override
   void initState() {
-    playbackController = Get.put(PlaybackController(
-        video: widget.video!, looping: true, hasVolume: false));
-    print("init record thumbnail - ${widget.video!.name}");
+    // playbackController = Get.put(PlaybackController(
+    // video: widget.video!, looping: true, hasVolume: false));
+    // print("init record thumbnail - ${widget.video!.name}");
     super.initState();
   }
 
@@ -40,38 +45,45 @@ class _RecordedVideoThumbnailState extends State<RecordedVideoThumbnail>
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        Get.to(
-            () => PlaybackScreen(
-                  video: widget.video!,
-                  homeTeam: widget.homeTeam,
-                  awayTeam: widget.awayTeam,
+        onTap: () {
+          widget.onTap();
+          Get.to(
+              () => PlaybackScreen(
+                    homeTeam: widget.homeTeam,
+                    awayTeam: widget.awayTeam,
+                  ),
+              fullscreenDialog: true,
+              transition: Transition.downToUp);
+        },
+        child: bloc.BlocConsumer<RecordBloc, RecordState>(
+          listener: (context, state) {
+            // TODO: implement listener
+          },
+          builder: (context, state) {
+            if (state is RecordStopped) {
+              return Container(
+                width: min(Get.width / 10, 55),
+                height: Get.width / 10,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 3,
+                  ),
                 ),
-            fullscreenDialog: true,
-            transition: Transition.downToUp);
-      },
-      child: GetBuilder<PlaybackController>(
-          init: playbackController,
-          builder: (controller) {
-            return Container(
-              width: min(Get.width / 10, 55),
-              height: Get.width / 10,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(3.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: VideoPlayer(
+                        context.read<RecordService>().thumbnailController),
+                  ),
                 ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(3.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: VideoPlayer(playbackController.localController),
-                ),
-              ),
-            );
-          }),
-    );
+              );
+            } else {
+              return CircularProgressIndicator();
+            }
+          },
+        ));
   }
 }
