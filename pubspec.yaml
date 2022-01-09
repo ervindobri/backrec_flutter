@@ -13,15 +13,30 @@ dependencies:
   flutter:
     sdk: flutter
 
-  bloc: ^7.2.0
-  flutter_bloc: ^7.3.0
+  
+  bloc: ^8.0.2
+  flutter_bloc: ^8.0.1
+  get_it: ^7.2.0
+
+  # Value equality
+  equatable: ^2.0.3
+  # Functional programming thingies
+  dartz: ^0.10.0
+  # Remote API
+  data_connection_checker_tv: ^0.3.5-nullsafety
+  http: ^0.13.0
+  # Local cache
+  shared_preferences: ^2.0.8
+  flutter_secure_storage: ^5.0.2
+
+
   cupertino_icons: ^1.0.2
   get: ^4.2.4
   font_awesome_flutter: ^9.1.0
   google_fonts: ^2.1.0
   # camerawesome: ^0.3.0+1
-  camera: ^0.8.1+5
-  video_player: ^2.1.12
+  camera: ^0.9.4+5
+  video_player: ^2.2.10
   flutter_feather_icons: ^2.0.0+1
   flutter_typeahead: ^3.2.0
   gallery_saver: ^2.1.2

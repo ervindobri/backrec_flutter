@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:backrec_flutter/constants/global_colors.dart';
+import 'package:backrec_flutter/core/constants/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

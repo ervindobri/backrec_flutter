@@ -1,4 +1,3 @@
-import 'package:backrec_flutter/constants/global_colors.dart';
 import 'package:flutter/material.dart';
 
 class FilterColor extends MaterialStateColor {
