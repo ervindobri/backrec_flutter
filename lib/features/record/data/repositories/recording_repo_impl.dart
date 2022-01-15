@@ -1,13 +1,14 @@
 import 'package:backrec_flutter/core/error/exceptions.dart';
 import 'package:backrec_flutter/core/error/failures.dart';
 import 'package:backrec_flutter/features/record/data/datasources/recording_local_datasource.dart';
+import 'package:backrec_flutter/features/record/data/models/marker.dart';
 import 'package:backrec_flutter/features/record/domain/repositories/recording_repository.dart';
-import 'package:backrec_flutter/models/marker.dart';
 import 'package:camera/camera.dart';
 import 'package:dartz/dartz.dart';
 
 typedef Future<String> _UsecaseChooser();
 typedef Future<CameraController> _InitUsecaseChooser();
+typedef Future<XFile> _VideoUsecaseChooser();
 
 class RecordingRepositoryImpl extends RecordingRepository {
   final RecordingLocalDataSource localDataSource;
@@ -26,6 +27,21 @@ class RecordingRepositoryImpl extends RecordingRepository {
     try {
       final remoteUserInfo = await getUsecase();
       return Right(remoteUserInfo);
+    } on CustomServerException catch (e) {
+      return Left(CustomServerFailure(e.message));
+    } on RedirectException catch (e) {
+      return Left(RedirectFailure(e.cause));
+    } on RecordingException catch (e) {
+      return Left(RecordingFailure(e.message));
+    }
+  }
+
+  Future<Either<Failure, XFile>> _video(
+    _VideoUsecaseChooser getUsecase,
+  ) async {
+    try {
+      final localVideo = await getUsecase();
+      return Right(localVideo);
     } on CustomServerException catch (e) {
       return Left(CustomServerFailure(e.message));
     } on RedirectException catch (e) {
@@ -60,8 +76,8 @@ class RecordingRepositoryImpl extends RecordingRepository {
   }
 
   @override
-  Future<Either<Failure, String>> stopRecording() async {
-    return await _action(() {
+  Future<Either<Failure, XFile>> stopRecording() async {
+    return await _video(() {
       recordingStarted = false;
       return localDataSource.stopRecording();
     });

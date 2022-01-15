@@ -1,8 +1,9 @@
 import 'dart:ui';
 
 import 'package:backrec_flutter/core/constants/global_colors.dart';
+import 'package:backrec_flutter/core/constants/global_styles.dart';
+import 'package:backrec_flutter/features/record/data/models/team.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/dialogs/team_selector_dialog.dart';
-import 'package:backrec_flutter/models/team.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:get/get.dart';
@@ -20,8 +21,6 @@ class TeamSelector extends StatefulWidget {
 
 class _TeamSelectorState extends State<TeamSelector> {
   bool _teamSelected = false;
-
-  //TODO: display team names
   Team homeTeam = Team(name: '', founded: 0000),
       awayTeam = Team(name: '', founded: 0000);
 
@@ -48,14 +47,14 @@ class _TeamSelectorState extends State<TeamSelector> {
             useSafeArea: false);
       },
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: GlobalStyles.radiusAll12,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: GlobalStyles.blur,
           child: Container(
             width: 300,
             height: 40,
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: GlobalStyles.radiusAll12,
                 color: GlobalColors.primaryGrey.withOpacity(.4)),
             child: getTeams(),
           ),
@@ -65,7 +64,7 @@ class _TeamSelectorState extends State<TeamSelector> {
   }
 
   getTeams() {
-    if (homeTeam.name == '' || awayTeam.name == '') {
+    if (widget.initialHome != null && widget.initialAway != null) {
       if (widget.initialHome!.name != '' && widget.initialAway!.name != '') {
         return Container(
           child: Row(

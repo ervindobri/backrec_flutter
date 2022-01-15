@@ -1,10 +1,8 @@
 import 'dart:io';
 
 import 'package:backrec_flutter/core/error/exceptions.dart';
-import 'package:backrec_flutter/core/error/failures.dart';
-import 'package:backrec_flutter/models/marker.dart';
+import 'package:backrec_flutter/features/record/data/models/marker.dart';
 import 'package:camera/camera.dart';
-import 'package:dartz/dartz.dart';
 import 'package:video_player/video_player.dart';
 
 abstract class PlaybackLocalDataSource {
@@ -58,23 +56,30 @@ class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
 
   @override
   Future<VideoPlayerController> initializePlayback(XFile video) async {
-    controller = VideoPlayerController.file(File(video.path));
-    await controller?.initialize();
-    await controller?.setVolume(1.0);
-    await controller?.play();
-    return Future.value(controller);
-    // return Future.value("Playback controller set successfully");
+    try {
+      controller = VideoPlayerController.file(File(video.path));
+      await controller?.initialize();
+      await controller?.setVolume(1.0);
+      await controller?.play();
+      return Future.value(controller);
+    } catch (e) {
+      throw PlaybackException(e.toString());
+    }
   }
 
   @override
   Future<VideoPlayerController> initializeThumbnail(XFile video) async {
-    thumbnailController = VideoPlayerController.file(File(video.path));
-    await thumbnailController?.initialize();
-    await thumbnailController?.setLooping(true);
-    await thumbnailController?.setVolume(0.0);
-    await thumbnailController?.play();
-    return Future.value(thumbnailController!);
-    // return Future.value("Thumbnail controller set successfully");
+    try {
+      print("Initializing thumbnail: ${video.path}");
+      thumbnailController = VideoPlayerController.file(File(video.path));
+      await thumbnailController?.initialize();
+      await thumbnailController?.setLooping(true);
+      await thumbnailController?.setVolume(0.0);
+      await thumbnailController?.play();
+      return Future.value(thumbnailController!);
+    } catch (e) {
+      throw PlaybackException(e.toString());
+    }
   }
 
   @override

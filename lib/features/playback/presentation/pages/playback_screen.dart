@@ -3,25 +3,26 @@ import 'package:backrec_flutter/core/constants/global_colors.dart';
 import 'package:backrec_flutter/core/extensions/text_theme_ext.dart';
 import 'package:backrec_flutter/core/utils/nav_utils.dart';
 import 'package:backrec_flutter/core/utils/ui_utils.dart';
-import 'package:backrec_flutter/features/playback/domain/repositories/playback_repository.dart';
 import 'package:backrec_flutter/features/playback/presentation/bloc/playback_bloc.dart';
 import 'package:backrec_flutter/features/playback/presentation/widgets/bar_actions.dart';
+import 'package:backrec_flutter/features/playback/presentation/widgets/marker_info.dart';
 import 'package:backrec_flutter/features/playback/presentation/widgets/overlay_actions.dart';
+import 'package:backrec_flutter/features/record/data/models/marker.dart';
+import 'package:backrec_flutter/features/record/data/models/team.dart';
+import 'package:backrec_flutter/features/record/domain/repositories/marker_repository.dart';
+import 'package:backrec_flutter/features/record/presentation/cubit/marker_cubit.dart';
 import 'package:backrec_flutter/injection_container.dart';
-import 'package:backrec_flutter/models/marker.dart';
-import 'package:backrec_flutter/models/team.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/add_marker_button.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:get/get_navigation/src/root/parse_route.dart';
 import 'package:vibration/vibration.dart';
 import 'package:video_player/video_player.dart';
 
 class PlaybackScreen extends StatefulWidget {
-  final Team homeTeam, awayTeam;
-  const PlaybackScreen(
-      {Key? key, required this.homeTeam, required this.awayTeam})
+  final Team? homeTeam, awayTeam;
+  const PlaybackScreen({Key? key, this.homeTeam, this.awayTeam})
       : super(key: key);
 
   @override
@@ -29,10 +30,13 @@ class PlaybackScreen extends StatefulWidget {
 }
 
 class _PlaybackScreenState extends State<PlaybackScreen> {
-  List<Marker> markers = [];
-  late Timer timer;
+  // List<Marker> markers = [];
+  Timer? timer;
   bool _inFocus = true;
   late VideoPlayerController controller;
+  Marker? currentMarker;
+  bool isMarkerVisible = false;
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +46,7 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
   setFocus(bool isPlaying) {
     if (!_inFocus && isPlaying) {
       print("Getting in focus!");
-      Timer.periodic(Duration(seconds: 3), (timer) {
+      timer = Timer.periodic(Duration(seconds: 3), (timer) {
         setState(() {
           _inFocus = true;
           timer.cancel();
@@ -57,7 +61,9 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
 
   @override
   void dispose() {
-    timer.cancel();
+    timer?.cancel();
+    controller.removeListener(videoPlayerListener);
+    controller.dispose();
     super.dispose();
   }
 
@@ -71,9 +77,11 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
         listener: (context, state) {
           if (state is PlaybackInitialized) {
             controller = state.controller;
+            controller.addListener(videoPlayerListener);
           }
         },
-        buildWhen: (oldState, newState) => true,
+        buildWhen: (oldState, newState) =>
+            oldState.runtimeType != newState.runtimeType,
         builder: (context, state) {
           print(state);
           if (state is PlaybackInitialized ||
@@ -86,7 +94,6 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                   final isPlaying = value.isPlaying;
                   final totalDuration = value.duration;
                   final elapsed = value.position;
-                  print("Is playing: $isPlaying");
                   return Container(
                       width: width,
                       height: height,
@@ -94,7 +101,6 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                         children: [
                           GestureDetector(
                               onTap: () {
-                                print("tapped video player!");
                                 setFocus(isPlaying);
                               },
                               child: VideoPlayer(controller)),
@@ -139,44 +145,51 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                           AnimatedPositioned(
                             bottom: _inFocus ? -30 : 0,
                             duration: kThemeAnimationDuration,
-                            child: VideoPlayerActions(
-                              onPause: () {
-                                context
-                                    .read<PlaybackBloc>()
-                                    .add(StopPlaybackEvent());
-                                setFocus(true);
-                              },
-                              onPlay: () {
-                                context
-                                    .read<PlaybackBloc>()
-                                    .add(StartPlaybackEvent());
-                                setFocus(true);
-                              },
-                              onMarkerTap: (marker) {
-                                context
-                                    .read<PlaybackBloc>()
-                                    .add(SeekPlaybackEvent(marker.endPosition));
-                              },
-                              onJumpBackward: () {
-                                Vibration.vibrate();
-                                jumpToPreviousMarker(elapsed);
-                              },
-                              onJumpForward: () {
-                                Vibration.vibrate();
-                                jumpToNextMarker(elapsed);
-                              },
-                              markers: markers,
-                              controller: controller,
-                              inFocus: _inFocus,
-                              isPlaying: isPlaying,
-                              awayTeam: widget.awayTeam,
-                              homeTeam: widget.homeTeam,
-                              totalDuration: totalDuration,
-                              onSeek: (duration) {
-                                context
-                                    .read<PlaybackBloc>()
-                                    .add(SeekPlaybackEvent(duration));
-                              },
+                            child: RepositoryProvider(
+                              create: (context) => sl<MarkerRepository>(),
+                              child: BlocProvider(
+                                create: (context) => sl<MarkerCubit>(),
+                                child: VideoPlayerActions(
+                                  onPause: () {
+                                    context
+                                        .read<PlaybackBloc>()
+                                        .add(StopPlaybackEvent());
+                                    setFocus(true);
+                                  },
+                                  onPlay: () {
+                                    context
+                                        .read<PlaybackBloc>()
+                                        .add(StartPlaybackEvent());
+                                    setFocus(true);
+                                  },
+                                  onMarkerTap: (marker) {
+                                    context.read<PlaybackBloc>().add(
+                                        SeekPlaybackEvent(marker.endPosition));
+                                    currentMarker = marker;
+                                  },
+                                  onJumpBackward: () {
+                                    Vibration.vibrate();
+                                    jumpToPreviousMarker(elapsed);
+                                  },
+                                  onJumpForward: () {
+                                    Vibration.vibrate();
+                                    jumpToNextMarker(elapsed);
+                                  },
+                                  // markers: markers,
+                                  controller: controller,
+                                  inFocus: _inFocus,
+                                  isPlaying: isPlaying,
+                                  awayTeam: widget.awayTeam,
+                                  homeTeam: widget.homeTeam,
+                                  totalDuration: totalDuration,
+                                  onSeek: (duration) {
+                                    context
+                                        .read<PlaybackBloc>()
+                                        .add(SeekPlaybackEvent(duration));
+                                  },
+                                  setTeams: (home, away) {},
+                                ),
+                              ),
                             ),
                           ),
                           Positioned(
@@ -193,7 +206,10 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                                     homeTeam: widget.homeTeam,
                                     awayTeam: widget.awayTeam,
                                     onTap: () async {
-                                      await controller.pause();
+                                      context
+                                          .read<PlaybackBloc>()
+                                          .add(StopPlaybackEvent());
+                                      setFocus(true);
                                     },
                                     onCancel: () async {
                                       // if (isPlaying) {
@@ -204,12 +220,29 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                                       // service.saveMarker(marker);
                                       UiUtils.showToast(
                                           "Marker created successfully!");
-                                      setState(() => sl<PlaybackRepository>()
-                                          .markers
-                                          .add(marker));
-                                      // await controller.play();
+                                      context
+                                          .read<MarkerCubit>()
+                                          .addMarker(marker);
                                     },
-                                  )))
+                                  ))),
+                          Align(
+                              alignment: Alignment.topCenter,
+                              child: ValueListenableBuilder<Marker?>(
+                                  valueListenable: ValueNotifier(currentMarker),
+                                  builder: (context, value, child) {
+                                    if (value == null) {
+                                      return SizedBox();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 10.0),
+                                      child: MarkerInfo(
+                                        marker: currentMarker!,
+                                        homeTeam: widget.homeTeam,
+                                        awayTeam: widget.awayTeam,
+                                        visible: isMarkerVisible,
+                                      ),
+                                    );
+                                  })),
                         ],
                       ));
                 });
@@ -223,14 +256,21 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
     ));
   }
 
+  void videoPlayerListener() {
+    final elapsed = controller.value.position;
+    setState(() {
+      isMarkerVisible = markerVisible(elapsed);
+    });
+  }
+
   void jumpToPreviousMarker(Duration elapsed) {
+    final markers = context.read<MarkerCubit>().markers();
     if (markers.length > 0) {
       var closest = markers.reduce((a, b) =>
           (a.endPosition.inMilliseconds - elapsed.inMilliseconds).abs() <
                   (b.endPosition.inMilliseconds - elapsed.inMilliseconds).abs()
               ? a
               : b);
-      print(closest.startPosition);
       if (closest.endPosition != Duration.zero) {
         context
             .read<PlaybackBloc>()
@@ -240,6 +280,7 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
   }
 
   void jumpToNextMarker(Duration elapsed) {
+    final markers = context.read<MarkerCubit>().markers();
     if (markers.length > 0) {
       Marker firstMarker = markers.firstWhere(
           (element) => element.startPosition > elapsed,
@@ -250,5 +291,23 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
             .add(SeekPlaybackEvent(firstMarker.startPosition));
       }
     }
+  }
+
+  bool markerVisible(Duration elapsed) {
+    final markers = context.read<MarkerCubit>().markers();
+    // if (currentMarker != null) {
+    //   return this.currentMarker!.endPosition.compareTo(elapsed) >= 0;
+    // }
+    if (markers.isNotEmpty) {
+      final Marker? nextMarker = markers.firstWhereOrNull(
+        (element) =>
+            element.startPosition.compareTo(elapsed) < 0 &&
+            element.endPosition.compareTo(elapsed) >= 0,
+      );
+      if (nextMarker != null) {
+        return nextMarker.endPosition.compareTo(elapsed) >= 0;
+      }
+    }
+    return false;
   }
 }

@@ -4,23 +4,16 @@ import 'package:backrec_flutter/features/playback/data/datasources/playback_loca
 import 'package:backrec_flutter/features/playback/domain/repositories/playback_repository.dart';
 import 'package:camera/camera.dart';
 import 'package:dartz/dartz.dart';
-import 'package:backrec_flutter/models/marker.dart';
 import 'package:video_player/video_player.dart';
 
 typedef Future<String> _UsecaseChooser();
-typedef Future<void> _VoidUsecaseChooser();
+// typedef Future<void> _VoidUsecaseChooser();
 typedef Future<VideoPlayerController> _InitUsecaseChooser();
 
-class PlaybackRepositoryImpl extends PlaybackRepository {
+class PlaybackRepositoryImpl implements PlaybackRepository {
   final PlaybackLocalDataSource localDataSource;
 
   PlaybackRepositoryImpl({required this.localDataSource});
-  @override
-  Future<Either<Failure, String>> setMarkers(List<Marker> markers) async {
-    return await _action(() {
-      return localDataSource.setMarkers(markers);
-    });
-  }
 
   Future<Either<Failure, String>> _action(
     _UsecaseChooser getUsecase,
@@ -71,6 +64,7 @@ class PlaybackRepositoryImpl extends PlaybackRepository {
   Future<Either<Failure, VideoPlayerController>> initializePlayback(
       XFile video) async {
     return await _initialize(() {
+      this.video = video;
       return localDataSource.initializePlayback(video);
     });
   }
@@ -84,10 +78,12 @@ class PlaybackRepositoryImpl extends PlaybackRepository {
   }
 
   @override
-  Future<Either<Failure, String>> seekPlayback(Duration duration) async{
+  Future<Either<Failure, String>> seekPlayback(Duration duration) async {
     return await _action(() {
       return localDataSource.seekPlayback(duration);
     });
-
   }
+
+  @override
+  late XFile video;
 }

@@ -1,5 +1,5 @@
 import 'package:backrec_flutter/core/constants/global_colors.dart';
-import 'package:backrec_flutter/models/marker.dart';
+import 'package:backrec_flutter/features/record/data/models/marker.dart';
 import 'package:backrec_flutter/widgets/triangle_shape.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -60,6 +60,6 @@ class MarkerPin extends StatelessWidget {
       Duration endPosition, Duration totalDuration, double totalWidth) {
     var rate = ((endPosition.inMilliseconds / 1000) * totalWidth) /
         (totalDuration.inMilliseconds / 1000);
-    return rate - 17; // 17pixel offset
+    return rate - 8; // 17pixel offset
   }
 }

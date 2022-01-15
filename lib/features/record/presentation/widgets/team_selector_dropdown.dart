@@ -1,7 +1,7 @@
 import 'package:backrec_flutter/core/constants/global_colors.dart';
 import 'package:backrec_flutter/core/constants/global_data.dart';
 import 'package:backrec_flutter/core/extensions/text_theme_ext.dart';
-import 'package:backrec_flutter/models/team.dart';
+import 'package:backrec_flutter/features/record/data/models/team.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';

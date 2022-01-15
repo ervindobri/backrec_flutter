@@ -8,8 +8,11 @@ import 'package:backrec_flutter/features/playback/domain/usecases/pause_playback
 import 'package:backrec_flutter/features/playback/domain/usecases/seek_playback.dart';
 import 'package:backrec_flutter/features/playback/domain/usecases/start_playback.dart';
 import 'package:backrec_flutter/features/playback/presentation/bloc/playback_bloc.dart';
+import 'package:backrec_flutter/features/record/data/datasources/markers_local_datasource.dart';
 import 'package:backrec_flutter/features/record/data/datasources/recording_local_datasource.dart';
+import 'package:backrec_flutter/features/record/data/repositories/marker_repo_impl.dart';
 import 'package:backrec_flutter/features/record/data/repositories/recording_repo_impl.dart';
+import 'package:backrec_flutter/features/record/domain/repositories/marker_repository.dart';
 import 'package:backrec_flutter/features/record/domain/repositories/recording_repository.dart';
 import 'package:backrec_flutter/features/record/domain/usecases/init_camera.dart';
 import 'package:backrec_flutter/features/record/domain/usecases/start_recording.dart';
@@ -45,6 +48,14 @@ Future<void> init() async {
 
 void initMarkerFeature() {
   sl.registerFactory(() => MarkerCubit(repository: sl()));
+  sl.registerLazySingleton<MarkerRepository>(
+    () => MarkerRepositoryImpl(
+      localDataSource: sl(),
+    ),
+  );
+  sl.registerLazySingleton<MarkersLocalDataSource>(
+    () => MarkersLocalDataSourceImpl(),
+  );
 }
 
 void initTimerFeature() {

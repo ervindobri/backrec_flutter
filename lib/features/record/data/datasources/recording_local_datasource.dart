@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:backrec_flutter/core/error/exceptions.dart';
-import 'package:backrec_flutter/models/marker.dart';
+import 'package:backrec_flutter/features/record/data/models/marker.dart';
 import 'package:camera/camera.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 
@@ -12,7 +12,7 @@ abstract class RecordingLocalDataSource {
   late XFile video;
   Future<String> setMarkers(List<Marker> markers);
   Future<String> startRecording();
-  Future<String> stopRecording();
+  Future<XFile> stopRecording();
 
   Future<CameraController> initializeCamera();
   Future<String> focusCamera();
@@ -29,12 +29,8 @@ class RecordingLocalDataSourceImpl implements RecordingLocalDataSource {
   late XFile video;
   CameraController? controller;
   XFile videoFile = XFile("");
-
   late List<CameraDescription> cameras;
   late CameraDescription backCamera;
-
-  bool _recordingStarted = false;
-  bool _recordingStopped = false;
 
   @override
   Future<String> setMarkers(List<Marker> markers) {
@@ -50,42 +46,42 @@ class RecordingLocalDataSourceImpl implements RecordingLocalDataSource {
   @override
   Future<String> startRecording() async {
     final CameraController? cameraController = controller;
+    print(cameraController.hashCode);
+
     if (cameraController == null || !cameraController.value.isInitialized) {
       print('Error: select a camera first.');
       throw RecordingException("Select a camera first!");
     } else {
       if (cameraController.value.isRecordingVideo) {
         //do nothing
+        throw RecordingException("Recording already started.");
       } else {
-        await cameraController.startVideoRecording();
-        _recordingStarted = true;
-        _recordingStopped = false;
+        cameraController.startVideoRecording().then((value) {
+          print("started");
+        });
         return Future.value("Camera started!");
       }
     }
-    // A recording is already started, do nothing.
-    throw RecordingException("Recording already started.");
   }
 
+  /// Stop recording with the camera controller & save video file to gallery
   @override
-  Future<String> stopRecording() async {
+  Future<XFile> stopRecording() async {
     final CameraController? cameraController = controller;
+    print(cameraController.hashCode);
     if (cameraController == null || !cameraController.value.isRecordingVideo) {
       throw RecordingException("Select a camera first!");
     }
     try {
       // Get file
       videoFile = await cameraController.stopVideoRecording();
+      video = videoFile;
       // Save to gallery (because can't load back from app path)
       await GallerySaver.saveVideo(videoFile.path);
-      video = videoFile;
+      return video;
     } catch (e) {
       throw RecordingException(e.toString());
     }
-    _recordingStarted = false;
-    _recordingStopped = true;
-    alreadyRecorded = true;
-    return Future.value("Video saved to Gallery!");
   }
 
   @override
@@ -96,7 +92,6 @@ class RecordingLocalDataSourceImpl implements RecordingLocalDataSource {
     //   return Future.value("NO_CAMERA");
     // }
     // final CameraController cameraController = controller!;
-
     // final offset = Offset(
     //   details.localPosition.dx / constraints.maxWidth,
     //   details.localPosition.dy / constraints.maxHeight,
@@ -107,19 +102,20 @@ class RecordingLocalDataSourceImpl implements RecordingLocalDataSource {
     throw UnimplementedError("");
   }
 
+  /// Fetch the available cameras before initializing the app.
   Future<void> getCameras() async {
-    // Fetch the available cameras before initializing the app.
     try {
       cameras = await availableCameras();
       backCamera = cameras.firstWhere(
           (element) => element.lensDirection == CameraLensDirection.back);
-      onNewCameraSelected(backCamera);
+      await onNewCameraSelected(backCamera);
     } on CameraException catch (e) {
       throw RecordingException(e.description ?? e.toString());
     }
   }
 
-  void onNewCameraSelected(CameraDescription cameraDescription) async {
+  /// Selecting a new camera re-initializes the controller
+  Future<void> onNewCameraSelected(CameraDescription cameraDescription) async {
     if (controller != null) {
       await controller!.dispose();
     }
@@ -130,12 +126,8 @@ class RecordingLocalDataSourceImpl implements RecordingLocalDataSource {
       imageFormatGroup: ImageFormatGroup.bgra8888,
     );
     controller = cameraController;
-    // controller!.lockCaptureOrientation(DeviceOrientation.landscapeLeft);
-    // controller!.unlockCaptureOrientation();
-
     // If the controller is updated then update the UI.
     cameraController.addListener(() {
-      // if (mounted) setState(() {});
       if (cameraController.value.hasError) {
         throw CameraException(
             'ERR', '${cameraController.value.errorDescription}');
@@ -144,6 +136,7 @@ class RecordingLocalDataSourceImpl implements RecordingLocalDataSource {
     await cameraController.initialize();
   }
 
+  /// This method will be used to initialize the controller
   @override
   Future<CameraController> initializeCamera() async {
     try {

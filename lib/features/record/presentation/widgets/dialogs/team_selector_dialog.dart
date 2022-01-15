@@ -4,8 +4,8 @@ import 'package:backrec_flutter/core/constants/global_styles.dart';
 import 'package:backrec_flutter/core/extensions/text_theme_ext.dart';
 import 'package:backrec_flutter/core/utils/nav_utils.dart';
 import 'package:backrec_flutter/core/utils/ui_utils.dart';
+import 'package:backrec_flutter/features/record/data/models/team.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/team_selector_dropdown.dart';
-import 'package:backrec_flutter/models/team.dart';
 import 'package:backrec_flutter/widgets/buttons/icon_text_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
@@ -187,7 +187,7 @@ class _TeamSelectorDialogState extends State<TeamSelectorDialog> {
                           icon: FeatherIcons.xCircle,
                           text: 'Cancel',
                         ),
-                        IconTextButton(
+                        TextButton.icon(
                           onPressed: () {
                             if (homeTeam != null && awayTeam != null) {
                               widget.onTeamsSelected(homeTeam!, awayTeam!);
@@ -198,10 +198,10 @@ class _TeamSelectorDialogState extends State<TeamSelectorDialog> {
                               UiUtils.showToast("Select teams!");
                             }
                           },
-                          color: GlobalColors.primaryRed,
-                          icon: FeatherIcons.checkCircle,
-                          text: 'Apply',
-                          textColor: Colors.white,
+                          icon: Icon(FeatherIcons.checkCircle),
+                          label: Text('Apply',
+                              style: context.bodyText1
+                                  .copyWith(color: Colors.white)),
                         )
                       ],
                     ),

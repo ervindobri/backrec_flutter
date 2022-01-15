@@ -1,13 +1,20 @@
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
-import 'package:backrec_flutter/core/constants/global_colors.dart';
+import 'package:backrec_flutter/core/constants/constants.dart';
+import 'package:backrec_flutter/core/constants/global_strings.dart';
 import 'package:backrec_flutter/core/extensions/text_theme_ext.dart';
+import 'package:backrec_flutter/core/utils/ui_utils.dart';
+import 'package:backrec_flutter/features/playback/domain/repositories/playback_repository.dart';
+import 'package:backrec_flutter/features/record/data/models/team.dart';
+import 'package:backrec_flutter/features/record/domain/repositories/marker_repository.dart';
+import 'package:backrec_flutter/features/record/presentation/cubit/marker_cubit.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/dialogs/marker_dialog.dart';
-import 'package:backrec_flutter/models/marker.dart';
-import 'package:backrec_flutter/models/team.dart';
+import 'package:backrec_flutter/features/record/presentation/widgets/dialogs/team_selector_dialog.dart';
+import 'package:backrec_flutter/injection_container.dart';
 import 'package:backrec_flutter/widgets/marker_pin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_player/video_player.dart';
 
 typedef DurationCallback = Function(Duration);
@@ -19,34 +26,37 @@ class VideoPlayerActions extends StatelessWidget {
   final VoidCallback onJumpBackward;
   final VoidCallback onJumpForward;
   final MarkerCallback onMarkerTap;
-  final List<Marker> markers;
+  // final List<Marker> markers;
   final Duration totalDuration;
   final VideoPlayerController controller;
   final bool isPlaying;
   final bool inFocus;
-  final Team homeTeam;
-  final Team awayTeam;
+  final Team? homeTeam;
+  final Team? awayTeam;
+  final TeamSelectionCallback setTeams;
   const VideoPlayerActions(
       {Key? key,
       required this.onPlay,
       required this.onPause,
       required this.onJumpBackward,
       required this.onJumpForward,
-      required this.markers,
+      // required this.markers,
       this.totalDuration = Duration.zero,
       required this.controller,
       this.isPlaying = false,
       this.inFocus = false,
-      required this.homeTeam,
-      required this.awayTeam,
+      this.homeTeam,
+      this.awayTeam,
       required this.onSeek,
-      required this.onMarkerTap})
+      required this.onMarkerTap,
+      required this.setTeams})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
+    final markers = context.select((MarkerRepository repo) => repo.markers);
     return Container(
       width: width,
       height: 150,
@@ -66,15 +76,15 @@ class VideoPlayerActions extends StatelessWidget {
                 children: [
                   Tooltip(
                     message: 'Jump to previous marker',
-                    child: InkWell(
-                      onTap: () {
-                        onJumpBackward();
-                      },
-                      child: Container(
-                        width: 35,
-                        height: 35,
+                    child: IconButton(
+                      onPressed: onJumpBackward,
+                      iconSize: 20,
+                      icon: Container(
+                        width: 34,
+                        height: 34,
                         decoration: BoxDecoration(
                             shape: BoxShape.circle,
+                            boxShadow: GlobalStyles.redShadow,
                             color: GlobalColors.primaryRed),
                         child: Center(
                           child:
@@ -104,14 +114,14 @@ class VideoPlayerActions extends StatelessWidget {
                   Tooltip(
                     message: 'Jump to next marker',
                     child: IconButton(
-                      onPressed: () async {
-                        onJumpForward();
-                      },
+                      iconSize: 20,
+                      onPressed: onJumpForward,
                       icon: Container(
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
                             shape: BoxShape.circle,
+                            boxShadow: GlobalStyles.redShadow,
                             color: GlobalColors.primaryRed),
                         child: Center(
                           child: Icon(FeatherIcons.skipForward,
@@ -154,7 +164,7 @@ class VideoPlayerActions extends StatelessWidget {
               ),
             ),
           ),
-          // // bottom action and infos
+          // bottom action and infos
           Positioned(
             bottom: 0,
             child: AnimatedOpacity(
@@ -182,40 +192,78 @@ class VideoPlayerActions extends StatelessWidget {
                                   icon: Icon(FontAwesomeIcons.pause,
                                       color: Colors.white),
                                   onPressed: () {
-                                    // service.onPause();
-                                    // timer.cancel();
+                                    onPause();
                                   }),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 30.0),
-                          child: Container(
-                            width: 130,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(homeTeam.name,
-                                    style: context.bodyText1
-                                        .copyWith(color: Colors.white)),
-                                Text("VS",
-                                    style: context.bodyText1.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600)),
-                                Text(awayTeam.name,
-                                    style: context.bodyText1
-                                        .copyWith(color: Colors.white)),
-                              ],
-                            ),
-                          ),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: ValueNotifier(
+                              homeTeam != null && awayTeam != null),
+                          builder: (context, value, child) {
+                            if (value) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 30.0),
+                                child: Container(
+                                  width: 130,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(homeTeam!.name,
+                                          style: context.bodyText1
+                                              .copyWith(color: Colors.white)),
+                                      Text("VS",
+                                          style: context.bodyText1.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w600)),
+                                      Text(awayTeam!.name,
+                                          style: context.bodyText1
+                                              .copyWith(color: Colors.white)),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+                            return SizedBox();
+                          },
                         )
                       ],
                     ),
                     //trash - to delete video
                     Positioned(
                       right: 0,
-                      child: IconButton(
-                        icon: FaIcon(FontAwesomeIcons.trashAlt,
-                            color: Colors.white),
-                        onPressed: () {},
+                      child: Wrap(
+                        spacing: 16,
+                        children: [
+                          BlocListener<MarkerCubit, MarkerState>(
+                            listener: (context, state) {
+                              print(state);
+                              if (state is MarkerSaved) {
+                                UiUtils.showToast(
+                                    GlobalStrings.markersSavedToast);
+                              }
+                            },
+                            child: TextButton.icon(
+                              label: Text(GlobalStrings.saveMarkers,
+                                  style: context.bodyText1
+                                      .copyWith(color: Colors.white)),
+                              icon: FaIcon(FontAwesomeIcons.save,
+                                  color: Colors.white),
+                              onPressed: () {
+                                final video = sl<PlaybackRepository>().video;
+                                context
+                                    .read<MarkerCubit>()
+                                    .saveData(video.path);
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            icon: FaIcon(FontAwesomeIcons.trashAlt,
+                                color: Colors.white),
+                            onPressed: () {
+                              //TODO: delete original long video
+                            },
+                          ),
+                        ],
                       ),
                     )
                   ],

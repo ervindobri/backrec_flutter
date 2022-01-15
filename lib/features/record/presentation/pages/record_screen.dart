@@ -1,7 +1,7 @@
 import 'package:backrec_flutter/core/constants/global_colors.dart';
 import 'package:backrec_flutter/core/utils/ui_utils.dart';
 import 'package:backrec_flutter/features/playback/presentation/bloc/playback_bloc.dart';
-import 'package:backrec_flutter/features/record/data/datasources/recording_local_datasource.dart';
+import 'package:backrec_flutter/features/record/data/models/team.dart';
 import 'package:backrec_flutter/features/record/domain/repositories/recording_repository.dart';
 import 'package:backrec_flutter/features/record/presentation/bloc/camera_bloc.dart';
 import 'package:backrec_flutter/features/record/presentation/bloc/record_bloc.dart';
@@ -13,12 +13,9 @@ import 'package:backrec_flutter/features/record/presentation/widgets/recorded_th
 import 'package:backrec_flutter/features/record/presentation/widgets/team_selector.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/video_selector_thumbnail.dart';
 import 'package:backrec_flutter/injection_container.dart';
-import 'package:backrec_flutter/models/marker.dart';
-import 'package:backrec_flutter/models/team.dart';
-import 'package:backrec_flutter/widgets/record_time.dart';
+import 'package:backrec_flutter/features/record/presentation/widgets/record_time.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -31,98 +28,80 @@ class RecordScreen extends StatefulWidget {
 
 class _RecordScreenState extends State<RecordScreen>
     with WidgetsBindingObserver, TickerProviderStateMixin {
-  late Team homeTeam, awayTeam;
+  Team? homeTeam, awayTeam;
   final ImagePicker _picker = ImagePicker();
   bool alreadyRecorded = false;
-  List<Marker> markers = [];
-  late CameraController controller;
-  @override
-  void initState() {
-    super.initState();
-    homeTeam = new Team(founded: 0000, name: '');
-    awayTeam = new Team(founded: 0000, name: '');
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-    ]);
-  }
-
-  @override
-  void dispose() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-    super.dispose();
-  }
-
   // Counting pointers (number of user fingers on screen)
   int _pointers = 0;
+  bool recording = false;
+  late XFile video;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: Colors.black,
-        body: BlocListener<RecordBloc, RecordState>(
-          listener: (context, state) {
-            UiUtils.showToast(state.toString());
-            print(state);
-            if (state is RecordingError) {
-              print(state.message);
-            } else if (state is RecordingStopped) {
-              setState(() {
-                alreadyRecorded = true;
-              });
-            }
-          },
+        body: MultiBlocListener(
+          listeners: [
+            BlocListener<RecordBloc, RecordState>(
+              listener: (context, state) {
+                UiUtils.showToast(state.toString());
+                print(state);
+                if (state is RecordingError) {
+                  print(state.message);
+                  setState(() => recording = false);
+                } else if (state is RecordingStarted) {
+                  setState(() => recording = true);
+                } else if (state is RecordingStopped) {
+                  setState(() {
+                    alreadyRecorded = true;
+                    recording = false;
+                    video = state.video;
+                  });
+                }
+              },
+            ),
+            BlocListener<TimerBloc, TimerState>(
+              listener: (context, state) {
+                // print(state);
+              },
+            ),
+          ],
           child:
-              BlocConsumer<CameraBloc, CameraState>(listener: (context, state) {
-            if (state is CameraInitialized) {
-              controller = state.controller;
-            }
-          }, builder: (context, state) {
+              BlocBuilder<CameraBloc, CameraState>(builder: (context, state) {
             Widget loadedWidget = SizedBox();
-            if (state is CameraInitialized) {
-              loadedWidget = _cameraPreviewWidget(state.controller);
-            } else if (state is CameraLoading) {
+            if (state is CameraLoading) {
               loadedWidget = Center(
                 child:
                     CircularProgressIndicator(color: GlobalColors.primaryRed),
               );
+            } else if (state is CameraInitialized) {
+              loadedWidget = _cameraPreviewWidget(state.controller);
             }
             return Stack(
               alignment: Alignment.center,
               children: [
-                loadedWidget,
-                // _cameraTogglesRowWidget(),
-                // if (state is CameraInitialized)
-                //   ValueListenableBuilder<CameraValue>(
-                //       valueListenable: controller,
-                //       builder: (context, CameraValue value, child) {
-                //         if (value.isRecordingVideo) {
-                //           return
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: BlocProvider(
-                    create: (context) =>
-                        context.read<TimerBloc>()..add(TimerStarted()),
-                    child: RecordTime(),
+                loadedWidget, //camera
+                BlocProvider(
+                  create: (context) => context.read<TimerBloc>(),
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: ValueNotifier(recording),
+                    builder: (context, value, child) {
+                      if (value) {
+                        return child!;
+                      }
+                      return SizedBox();
+                    },
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: RecordTime(),
+                    ),
                   ),
-                )
-                //     ;
-                //   } else {
-                //     return SizedBox();
-                //   }
-                // }),
-                ,
+                ),
                 Align(
                   alignment: Alignment.topCenter,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 10.0),
                     child: TeamSelector(
-                      initialHome: homeTeam,
-                      initialAway: awayTeam,
                       setTeams: (home, away) {
                         setState(() {
                           homeTeam = home;
@@ -136,16 +115,11 @@ class _RecordScreenState extends State<RecordScreen>
                   right: 20,
                   child: BlocBuilder<RecordBloc, RecordState>(
                       builder: (context, state) {
-                    var value = false;
-                    if (state is RecordingStarted) {
-                      value = true;
-                    } else if (state is RecordingStopped) {
-                      value = false;
-                    }
                     return RecordButton(
                       onRecord: () {
-                        if (!value) {
+                        if (!recording) {
                           context.read<RecordBloc>().add(StartRecordEvent());
+                          context.read<TimerBloc>().add(TimerStarted());
                           UiUtils.vibrate();
                         } else {
                           context.read<RecordBloc>().add(StopRecordEvent());
@@ -153,7 +127,7 @@ class _RecordScreenState extends State<RecordScreen>
                           UiUtils.vibrate(duration: 200);
                         }
                       },
-                      recordingStarted: value,
+                      recordingStarted: recording,
                     );
                   }),
                 ),
@@ -166,8 +140,6 @@ class _RecordScreenState extends State<RecordScreen>
                             valueListenable: ValueNotifier(alreadyRecorded),
                             builder: (context, value, child) {
                               if (value) {
-                                final video =
-                                    sl<RecordingLocalDataSource>().video;
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 15.0),
                                   child: MultiBlocProvider(
@@ -178,15 +150,13 @@ class _RecordScreenState extends State<RecordScreen>
                                               InitializeThumbnailEvent(video)),
                                       ),
                                       BlocProvider(
-                                        create: (context) =>
-                                            context.read<RecordBloc>(),
+                                        create: (context) => sl<RecordBloc>(),
                                       ),
                                     ],
                                     child: RecordedVideoThumbnail(
                                       video: video,
                                       homeTeam: homeTeam,
                                       awayTeam: awayTeam,
-                                      markers: markers,
                                       onTap: () async {
                                         final recordingStarted =
                                             sl<RecordingRepository>()
@@ -219,25 +189,29 @@ class _RecordScreenState extends State<RecordScreen>
                         ),
                       ],
                     )),
-                // if (controller.recordingStarted.value)
-                // Positioned(
-                //     left: 20,
-                //     bottom: 20,
-                //     child: Row(
-                //       children: [
-                //         NewMarkerButton(
-                //           endPosition: controller,
-                //           homeTeam: homeTeam,
-                //           awayTeam: awayTeam,
-                //           onTap: () {},
-                //           onCancel: () {},
-                //           onMarkerConfigured: (marker) {
-                //             markers.add(marker);
-                //             UiUtils.showToast("Marker created successfully");
-                //           },
-                //         ),
-                //       ],
-                //     ))
+                ValueListenableBuilder<bool>(
+                    valueListenable: ValueNotifier(recording),
+                    builder: (context, value, child) {
+                      if (value) {
+                        return child!;
+                      }
+                      return SizedBox();
+                    },
+                    child: Positioned(
+                      left: 20,
+                      bottom: 20,
+                      child: NewMarkerButton(
+                        endPosition: getCurrentTimerPosition(context),
+                        homeTeam: homeTeam,
+                        awayTeam: awayTeam,
+                        onTap: () {},
+                        onCancel: () {},
+                        onMarkerConfigured: (marker) {
+                          context.read<MarkerCubit>().addMarker(marker);
+                          UiUtils.showToast("Marker created successfully");
+                        },
+                      ),
+                    )),
               ],
             );
           }),
@@ -249,38 +223,34 @@ class _RecordScreenState extends State<RecordScreen>
     return Listener(
       onPointerDown: (_) => _pointers++,
       onPointerUp: (_) => _pointers--,
-      child: FutureBuilder(
-          future: controller.initialize(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return AspectRatio(
-                  aspectRatio: controller.value.aspectRatio,
-                  child: CameraPreview(
-                    controller,
-                    child: LayoutBuilder(builder:
-                        (BuildContext context, BoxConstraints constraints) {
-                      return GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        // onScaleStart: _handleScaleStart,
-                        // onScaleUpdate: _handleScaleUpdate,
-                        onTapDown: (details) {
-                          // context.read<CameraBloc>().add(CameraFocusEvent(details, constraints));
-                        },
-                      );
-                    }),
-                  ));
-            } else {
-              return Container(
-                color: Colors.black,
-                child: Center(
-                  child: CircularProgressIndicator(
-                    backgroundColor: Colors.black,
-                    color: GlobalColors.primaryRed,
-                  ),
-                ),
+      child: AspectRatio(
+        aspectRatio: controller.value.aspectRatio,
+        child: CameraPreview(
+          controller,
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                // onScaleStart: _handleScaleStart,
+                // onScaleUpdate: _handleScaleUpdate,
+                onTapDown: (details) {
+                  // context.read<CameraBloc>().add(CameraFocusEvent(details, constraints));
+                },
               );
-            }
-          }),
+            },
+          ),
+        ),
+      ),
     );
+  }
+
+  getCurrentTimerPosition(BuildContext context) {
+    final duration = context.select((TimerBloc bloc) => bloc.state.duration);
+    final minutes = ((duration / 600) % 60).floor();
+    final seconds = (duration / 10 % 60).floor();
+    final milliSeconds = ((duration * 10) % 99);
+    // print("Minutes:$minutes:$seconds $milliSeconds");
+    return Duration(
+        minutes: minutes, seconds: seconds, milliseconds: milliSeconds);
   }
 }

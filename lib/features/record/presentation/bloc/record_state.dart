@@ -14,9 +14,8 @@ class RecordingStarted extends RecordState {
 }
 
 class RecordingStopped extends RecordState {
-  final String message;
-
-  RecordingStopped(this.message);
+  final XFile video;
+  RecordingStopped(this.video);
 }
 
 class RecordingError extends RecordState {

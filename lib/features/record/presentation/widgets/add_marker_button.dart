@@ -1,13 +1,14 @@
-import 'dart:ui';
 import 'package:backrec_flutter/core/constants/global_colors.dart';
+import 'package:backrec_flutter/core/constants/global_strings.dart';
+import 'package:backrec_flutter/core/constants/global_styles.dart';
+import 'package:backrec_flutter/features/record/data/models/team.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/dialogs/marker_dialog.dart';
-import 'package:backrec_flutter/models/team.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:get/get.dart';
 
 class NewMarkerButton extends StatelessWidget {
-  final Team homeTeam, awayTeam;
+  final Team? homeTeam, awayTeam;
   final Duration endPosition;
   final MarkerCallback onMarkerConfigured;
   final VoidCallback onTap;
@@ -40,9 +41,9 @@ class NewMarkerButton extends StatelessWidget {
                 ));
       },
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: GlobalStyles.radiusAll12,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: GlobalStyles.blur,
           child: Container(
             // width: 55,
             height: 55,
@@ -59,7 +60,7 @@ class NewMarkerButton extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
-                      "Marker",
+                      GlobalStrings.marker,
                       style: Get.textTheme.bodyText1!
                           .copyWith(color: Colors.white),
                     ),

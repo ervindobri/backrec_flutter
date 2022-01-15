@@ -1,5 +1,5 @@
-import 'dart:ui';
 import 'package:backrec_flutter/core/constants/global_colors.dart';
+import 'package:backrec_flutter/core/constants/global_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -15,7 +15,7 @@ class MarkerContainer extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        filter: GlobalStyles.blur,
         child: Container(
           height: Get.width / 3,
           width: Get.width / 3,

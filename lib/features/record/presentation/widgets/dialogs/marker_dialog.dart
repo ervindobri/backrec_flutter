@@ -1,11 +1,12 @@
+import 'package:backrec_flutter/core/constants/constants.dart';
 import 'package:backrec_flutter/core/constants/global_colors.dart';
 import 'package:backrec_flutter/core/constants/global_data.dart';
 import 'package:backrec_flutter/core/extensions/text_theme_ext.dart';
 import 'package:backrec_flutter/core/utils/nav_utils.dart';
-import 'package:backrec_flutter/models/filter.dart';
-import 'package:backrec_flutter/models/marker.dart';
-import 'package:backrec_flutter/models/player.dart';
-import 'package:backrec_flutter/models/team.dart';
+import 'package:backrec_flutter/features/record/data/models/filter.dart';
+import 'package:backrec_flutter/features/record/data/models/marker.dart';
+import 'package:backrec_flutter/features/record/data/models/player.dart';
+import 'package:backrec_flutter/features/record/data/models/team.dart';
 import 'package:backrec_flutter/widgets/buttons/icon_text_button.dart';
 import 'package:backrec_flutter/widgets/filter_chip_color.dart';
 import 'package:backrec_flutter/widgets/marker_container.dart';
@@ -17,7 +18,8 @@ typedef MarkerCallback = Function(Marker);
 
 class MarkerDialog extends StatefulWidget {
   final Duration endPosition;
-  final Team homeTeam, awayTeam;
+  final List<Filter>? filters;
+  final Team? homeTeam, awayTeam;
   final MarkerCallback onMarkerConfigured;
   final VoidCallback onCancel;
 
@@ -27,7 +29,8 @@ class MarkerDialog extends StatefulWidget {
       required this.awayTeam,
       required this.endPosition,
       required this.onCancel,
-      required this.onMarkerConfigured})
+      required this.onMarkerConfigured,
+      this.filters})
       : super(key: key);
   @override
   State<MarkerDialog> createState() => _MarkerDialogState();
@@ -37,21 +40,20 @@ class _MarkerDialogState extends State<MarkerDialog> {
   Marker marker = new Marker();
   late final Team homeTeam, awayTeam;
   late List<Player> allPlayers;
-
-  String _selectedName = '';
-
+  // String _selectedName = '';
   //Selected markers
-  Player player1 = new Player(), player2 = new Player();
-  Team _selectedTeam = new Team();
-  List selectedTypes = [];
-  double _rating = 0.0;
+  Player? player1, player2;
+  Team? _selectedTeam;
+  List<MarkerType>? selectedTypes = [];
+  double? _rating;
   List<Filter> filters = [];
 
   List<Player> _selectedPlayers = [];
   @override
   void initState() {
-    homeTeam = widget.homeTeam;
-    awayTeam = widget.awayTeam;
+    homeTeam = widget.homeTeam ?? Team();
+    awayTeam = widget.awayTeam ?? Team();
+    setInitialFilters();
     allPlayers = homeTeam.players + awayTeam.players;
     print("Init - ${homeTeam.name}, ${awayTeam.name} - ${widget.endPosition}");
     super.initState();
@@ -237,19 +239,20 @@ class _MarkerDialogState extends State<MarkerDialog> {
                                         children: GlobalData.markerTypes
                                             .map((e) => FilterChip(
                                                 labelStyle: TextStyle(
-                                                  color: new FilterColor(),
+                                                  color: FilterColor(),
                                                 ),
                                                 selectedColor:
                                                     GlobalColors.primaryRed,
-                                                label: Text(e.toString()),
-                                                selected:
-                                                    selectedTypes.contains(e),
+                                                label: Text(e.parse),
+                                                selected: selectedTypes
+                                                        ?.contains(e) ??
+                                                    false,
                                                 onSelected: (selected) {
                                                   setState(() {
                                                     if (selected) {
-                                                      selectedTypes.add(e);
+                                                      selectedTypes?.add(e);
                                                     } else {
-                                                      selectedTypes.remove(e);
+                                                      selectedTypes?.remove(e);
                                                     }
                                                   });
                                                 }))
@@ -279,25 +282,27 @@ class _MarkerDialogState extends State<MarkerDialog> {
                                       child: Center(
                                         child: Stack(
                                           children: [
-                                            Center(
-                                              child: Icon(
-                                                FeatherIcons.star,
-                                                color: _rating > 0
-                                                    ? GlobalColors.primaryRed
-                                                    : Colors.white,
-                                                size: 170,
-                                              ),
-                                            ),
-                                            if (_rating > 0)
+                                            if (_rating != null) ...[
                                               Center(
-                                                child: Text(
-                                                  _rating.toStringAsFixed(0),
-                                                  style: context.bodyText1
-                                                      .copyWith(
-                                                          color: Colors.white,
-                                                          fontSize: 30),
+                                                child: Icon(
+                                                  FeatherIcons.star,
+                                                  color: _rating! > 0
+                                                      ? GlobalColors.primaryRed
+                                                      : Colors.white,
+                                                  size: 170,
                                                 ),
                                               ),
+                                              if (_rating! > 0)
+                                                Center(
+                                                  child: Text(
+                                                    _rating!.toStringAsFixed(0),
+                                                    style: context.bodyText1
+                                                        .copyWith(
+                                                            color: Colors.white,
+                                                            fontSize: 30),
+                                                  ),
+                                                ),
+                                            ]
                                           ],
                                         ),
                                       ),
@@ -324,26 +329,30 @@ class _MarkerDialogState extends State<MarkerDialog> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             mainAxisSize: MainAxisSize.max,
                             children: [
-                              IconTextButton(
+                              TextButton.icon(
+                                style: GlobalStyles.buttonStyle(
+                                    color: GlobalColors.lightGrey),
                                 onPressed: () {
                                   NavUtils.back(context);
                                   widget.onCancel();
                                 },
-                                color: Colors.white.withOpacity(.4),
-                                textColor: GlobalColors.primaryGrey,
-                                icon: FeatherIcons.xCircle,
-                                text: 'Cancel',
+                                icon: Icon(FeatherIcons.xCircle,
+                                    color: GlobalColors.primaryGrey),
+                                label: Text('Cancel', style: context.bodyText1),
                               ),
-                              IconTextButton(
+                              TextButton.icon(
+                                style: GlobalStyles.buttonStyle(
+                                    color: GlobalColors.primaryRed),
                                 onPressed: () {
                                   setFilters();
                                   widget.onMarkerConfigured(marker);
                                   NavUtils.back(context);
                                 },
-                                color: GlobalColors.primaryRed,
-                                icon: FeatherIcons.checkCircle,
-                                text: 'Apply',
-                                textColor: Colors.white,
+                                icon: Icon(FeatherIcons.checkCircle,
+                                    color: Colors.white),
+                                label: Text('Apply',
+                                    style: context.bodyText1
+                                        .copyWith(color: Colors.white)),
                               )
                             ],
                           ),
@@ -359,17 +368,58 @@ class _MarkerDialogState extends State<MarkerDialog> {
   }
 
   void setFilters() {
-    filters.add(PlayerFilter(player1, player2));
-    marker.startPosition = widget.endPosition - GlobalData.clipLength;
+    /// Set start and end position
+    ///
+    marker.startPosition = Duration.zero;
+    if (widget.endPosition.compareTo(GlobalData.clipLength) > 0) {
+      marker.startPosition = widget.endPosition - GlobalData.clipLength;
+    }
     marker.endPosition = widget.endPosition;
-    filters.add(TeamFilter(_selectedTeam));
-    filters.add(new TypeFilter(selectedTypes
-        .map((e) => MarkerType.values
-            .firstWhere((type) => type.toString().split('.')[1] == e))
-        .toList()));
 
-    filters.add(new RatingFilter(_rating));
+    if (player1 != null || player2 != null) {
+      filters.add(PlayerFilter(player1, player2));
+    }
+
+    if (_selectedTeam != null) {
+      filters.add(TeamFilter(_selectedTeam!));
+    }
+    if (selectedTypes != null && selectedTypes!.isNotEmpty) {
+      filters.add(TypeFilter(selectedTypes!
+          .map((e) => MarkerType.values.firstWhere((type) => type == e))
+          .toList()));
+    }
+
+    if (_rating != null) {
+      filters.add(new RatingFilter(_rating!));
+    }
     marker.filters = filters;
     print("New marker created: $marker");
+  }
+
+  void setInitialFilters() {
+    final filters = widget.filters;
+    if (filters != null) {
+      for (var filter in filters) {
+        switch (filter.runtimeType) {
+          case PlayerFilter:
+            _selectedPlayers = [
+              (filter as PlayerFilter).player1!,
+              (filter).player2!
+            ];
+            break;
+          case TeamFilter:
+            _selectedTeam = (filter as TeamFilter).team;
+            break;
+          case TypeFilter:
+            selectedTypes = [...(filter as TypeFilter).types];
+            break;
+          case RatingFilter:
+            _rating = (filter as RatingFilter).rating;
+            break;
+          default:
+        }
+      }
+    }
+    print(selectedTypes);
   }
 }

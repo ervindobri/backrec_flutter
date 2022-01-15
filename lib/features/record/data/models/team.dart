@@ -1,4 +1,4 @@
-import 'package:backrec_flutter/models/player.dart';
+import 'package:backrec_flutter/features/record/data/models/player.dart';
 
 class Team {
   late final String name; // club name

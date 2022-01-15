@@ -1,5 +1,6 @@
-import 'package:backrec_flutter/models/player.dart';
-import 'package:backrec_flutter/models/team.dart';
+import 'package:backrec_flutter/features/record/data/models/filter.dart';
+import 'package:backrec_flutter/features/record/data/models/player.dart';
+import 'package:backrec_flutter/features/record/data/models/team.dart';
 
 class GlobalData {
   static List<Team> teams = [
@@ -48,13 +49,13 @@ class GlobalData {
     ]),
   ];
 
-  static List markerTypes = [
-    "GOAL",
-    "ATTEMPT",
-    "FUNNY",
-    "ANALYZE",
-    "SKILL",
-    "TEACHING"
+  static List<MarkerType> markerTypes = [
+    MarkerType.GOAL,
+    MarkerType.ATTEMPT,
+    MarkerType.FUNNY,
+    MarkerType.ANALYZE,
+    MarkerType.SKILL,
+    MarkerType.TEACHING
   ];
 
   static Duration clipLength  = Duration(seconds: 12);

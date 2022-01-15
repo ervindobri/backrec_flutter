@@ -25,11 +25,11 @@ class BackrecTheme {
 
   static TextTheme get textTheme => TextTheme(
         caption: GoogleFonts.poppins(
-            fontSize: 12, fontWeight: FontWeight.w400, color: Colors.grey),
+            fontSize: 12, fontWeight: FontWeight.w400, color: GlobalColors.primaryGrey),
         subtitle1: GoogleFonts.poppins(
-            fontSize: 16, fontWeight: FontWeight.w500, color: Colors.grey),
+            fontSize: 16, fontWeight: FontWeight.w500, color: GlobalColors.primaryGrey),
         subtitle2: GoogleFonts.poppins(
-            fontSize: 16, fontWeight: FontWeight.w400, color: Colors.grey),
+            fontSize: 16, fontWeight: FontWeight.w400, color: GlobalColors.primaryGrey),
         bodyText1: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
