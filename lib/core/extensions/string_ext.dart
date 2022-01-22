@@ -8,7 +8,6 @@ extension VideoNameParser on String {
     final endIndex = this.indexOf(end, startIndex + start.length);
 
     final result = this.substring(startIndex + start.length, endIndex);
-    print(result);
     return result; // brown fox jumps
   }
 

@@ -8,7 +8,6 @@ import 'package:backrec_flutter/features/record/data/models/team.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/team_selector_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
-import 'package:get/get.dart';
 
 typedef TeamSelectionCallback = Function(Team, Team);
 
@@ -113,7 +112,7 @@ class _TeamSelectorDialogState extends State<TeamSelectorDialog> {
                         ),
                         //vs
                         Text("VS",
-                            style: Get.textTheme.bodyText1!
+                            style: context.bodyText1
                                 .copyWith(fontSize: 50, color: Colors.white)),
                         //away
                         Column(

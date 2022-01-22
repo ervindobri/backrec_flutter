@@ -1,7 +1,6 @@
 import 'package:backrec_flutter/core/constants/global_colors.dart';
 import 'package:backrec_flutter/core/constants/global_styles.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class MarkerContainer extends StatelessWidget {
   final Widget content;
@@ -12,13 +11,15 @@ class MarkerContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
         filter: GlobalStyles.blur,
         child: Container(
-          height: Get.width / 3,
-          width: Get.width / 3,
+          height: width / 3,
+          width: width / 3,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             color: GlobalColors.primaryGrey.withOpacity(.6),

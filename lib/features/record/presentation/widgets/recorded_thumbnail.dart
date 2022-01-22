@@ -39,7 +39,7 @@ class RecordedVideoThumbnail extends StatelessWidget {
             providers: [
               BlocProvider(
                 create: (context) => sl<PlaybackBloc>()
-                  ..add(InitializePlaybackEvent(video.name.parsed, false, true)),
+                  ..add(InitializePlaybackEvent(video.path, false, true)),
               ),
               BlocProvider(
                 create: (context) => sl<MarkerCubit>(),

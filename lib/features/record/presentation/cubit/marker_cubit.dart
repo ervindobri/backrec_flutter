@@ -56,7 +56,7 @@ class MarkerCubit extends Cubit<MarkerState> {
   Marker? findPreviousMarker(Duration elapsed) {
     print("Elapsed: ${elapsed.inMilliseconds}");
     print(markers);
-    if (markers.length > 0) {
+    if (markers.length > 0 && elapsed.inMilliseconds > 10) {
       Marker closest = markers
           .where((element) => element.startPosition.compareTo(elapsed) < 0)
           .reduce((a, b) {
@@ -84,7 +84,7 @@ class MarkerCubit extends Cubit<MarkerState> {
     return null;
   }
 
-  bool markerVisible(Duration elapsed) {
+  Marker? markerVisible(Duration elapsed) {
     if (markers.isNotEmpty) {
       final Marker? nextMarker = markers.firstWhereOrNull(
         (element) =>
@@ -92,10 +92,13 @@ class MarkerCubit extends Cubit<MarkerState> {
             element.endPosition.compareTo(elapsed) >= 0,
       );
       if (nextMarker != null) {
-        return nextMarker.endPosition.compareTo(elapsed) >= 0;
+        if (nextMarker.endPosition.compareTo(elapsed) >= 0) {
+          return nextMarker;
+        }
+        return null;
       }
     }
-    return false;
+    return null;
   }
 
   Future<void> updateMarker(Marker marker) async {
@@ -112,15 +115,25 @@ class MarkerCubit extends Cubit<MarkerState> {
     for (var item in markers) {
       print(item.startPosition.compareTo(elapsed));
       print(elapsed.compareTo(item.endPosition));
-      // If elapsed is between starPos and endPos and its atleast clipDuration after endposition
+      final endOffset = item.endPosition + clipDuration;
+      // If elapsed is between starPos and endPos
       if (item.startPosition.compareTo(elapsed) <= 0 &&
-              elapsed.compareTo(item.endPosition) < 1
-          //  ||
-          // elapsed.compareTo(item.endPosition + clipDuration) < 0
-
-          ) {
+          elapsed.compareTo(item.endPosition) < 1) {
+        return true;
+      } else if (elapsed.compareTo(item.endPosition) >= 0 &&
+          elapsed.compareTo(endOffset) <= 0) {
         return true;
       }
+      // Or the new marker will be too close to the endPos
+    }
+    return false;
+  }
+
+  noMoreMarkers(Duration elapsed) {
+    final lastMarker = markers
+        .reduce((a, b) => a.endPosition.compareTo(b.endPosition) > 0 ? a : b);
+    if (elapsed.compareTo(lastMarker.endPosition) > 0) {
+      return true;
     }
     return false;
   }

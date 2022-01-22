@@ -1,5 +1,5 @@
+import 'package:backrec_flutter/core/extensions/text_theme_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class IconTextButton extends StatelessWidget {
   final Color color;
@@ -38,7 +38,7 @@ class IconTextButton extends StatelessWidget {
                 ),
                 Text(
                   text,
-                  style: Get.textTheme.bodyText1!.copyWith(color: textColor),
+                  style: context.bodyText1.copyWith(color: textColor),
                 )
               ],
             ),

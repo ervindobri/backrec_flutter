@@ -101,12 +101,10 @@ class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
       if (video != null) {
         final path = this.video!.path;
         final galleryVideo = await File(path).delete();
-        print(galleryVideo);
-        return Future.value("Video deleted!");
+        return Future.value("Video deleted - ${galleryVideo.path}");
       }
       throw PlaybackException("Video data was not loaded.");
     } catch (e) {
-      print(e);
       throw PlaybackException("Video couldn't be deleted: $e");
     }
   }

@@ -9,12 +9,14 @@ class MarkerPin extends StatelessWidget {
     Key? key,
     required this.marker,
     required this.totalDuration,
+    required this.current,
     required this.totalWidth,
     required this.onMarkerTap,
   }) : super(key: key);
 
   final Marker marker;
   final Duration totalDuration;
+  final bool current;
   final double totalWidth;
   final VoidCallback onMarkerTap;
 
@@ -39,19 +41,30 @@ class MarkerPin extends StatelessWidget {
               Positioned(
                 bottom: 0,
                 left: 5,
-                child: CustomPaint(
-                    size: Size(20, 20),
-                    painter:
-                        DrawTriangleShape(color: GlobalColors.secondaryRed)),
+                child: AnimatedSwitcher(
+                  duration: kThemeAnimationDuration,
+                  child: current
+                      ? CustomPaint(
+                          size: Size(20, 20),
+                          painter:
+                              DrawTriangleShape(color: GlobalColors.primaryRed))
+                      : CustomPaint(
+                          size: Size(20, 20),
+                          painter: DrawTriangleShape(
+                              color: GlobalColors.secondaryRed)),
+                ),
               ),
               Positioned(
                 bottom: 10,
-                child: Container(
+                child: AnimatedContainer(
                     width: 30,
                     height: 30,
+                    duration: kThemeAnimationDuration,
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: GlobalColors.secondaryRed),
+                        color: current
+                            ? GlobalColors.primaryRed
+                            : GlobalColors.secondaryRed),
                     child: Center(
                       child: FaIcon(FontAwesomeIcons.volleyballBall,
                           color: Colors.white, size: 15),

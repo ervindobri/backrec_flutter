@@ -34,6 +34,7 @@ class MarkerInfo extends StatelessWidget {
         onTap: () {
           showDialog(
               context: context,
+              useSafeArea: false,
               builder: (_) => MarkerDialog(
                     endPosition: marker!.endPosition,
                     homeTeam: homeTeam,
@@ -53,7 +54,7 @@ class MarkerInfo extends StatelessWidget {
                   // height: 50,
                   decoration: BoxDecoration(
                     borderRadius: GlobalStyles.radiusAll12,
-                    color: GlobalColors.primaryGrey.withOpacity(.4),
+                    color: GlobalColors.primaryGrey.withOpacity(.6),
                   ),
                   padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
                   child: Wrap(

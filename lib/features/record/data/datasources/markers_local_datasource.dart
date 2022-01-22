@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:backrec_flutter/features/record/data/models/marker.dart';
+import 'package:dartz/dartz_unsafe.dart';
 import 'package:path_provider/path_provider.dart';
 
 abstract class MarkersLocalDataSource {
@@ -41,18 +42,18 @@ class MarkersLocalDataSourceImpl implements MarkersLocalDataSource {
         final videoDirectory = Directory(videoPath);
         if (await videoDirectory.exists()) {
           final markerFile = File('$videoPath/markers.json');
-          print(markerFile);
           final markerIds = this.markers.map((e) => e.id).toSet();
           this.markers.retainWhere((element) => markerIds.remove(element.id));
           final content = json.encode(this.markers);
+          print(content);
           markerFile.writeAsString(content);
         } else {
           final newDir = await Directory(videoPath).create(recursive: true);
           final markerFile = File('${newDir.path}/markers.json');
-          print(markerFile);
           final markerIds = this.markers.map((e) => e.id).toSet();
           this.markers.retainWhere((element) => markerIds.remove(element.id));
           final content = json.encode(this.markers);
+          print(content);
           markerFile.writeAsString(content);
         }
       }
@@ -86,11 +87,27 @@ class MarkersLocalDataSourceImpl implements MarkersLocalDataSource {
       final markerFile = File(fileName);
       if (await markerFile.exists()) {
         final data = json.decode(await markerFile.readAsString());
-
+        print("data: $data");
         data.asMap().forEach((index, piece) {
           final marker = Marker.fromJson(piece, index);
           markers.add(marker);
         });
+      }
+      List<Marker> removeables = [];
+      for (var item1 in markers) {
+        for (var item2 in markers) {
+          if (item1 != item2) {
+            if (item1.startPosition.inMilliseconds ==
+                item2.startPosition.inMilliseconds) {
+              removeables.add(item1);
+              break;
+            }
+          }
+        }
+      }
+      for (var item in removeables) {
+        print("$item removed");
+        markers.remove(item);
       }
     }
   }

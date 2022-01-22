@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 abstract class PlaybackRepository {
   late XFile video;
   String get videoNameParsed;
+  late String path;
   Future<Either<Failure, String>> startPlayback();
   Future<Either<Failure, String>> stopPlayback();
   Future<Either<Failure, VideoPlayerController>> initializeThumbnail(

@@ -45,6 +45,8 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
       return Left(RedirectFailure(e.cause));
     } on RecordingException catch (e) {
       return Left(RecordingFailure(e.message));
+    } on PlaybackException catch (e) {
+      return Left(PlaybackFailure(e.message));
     }
   }
 
@@ -67,6 +69,7 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
       String video) async {
     return await _initialize(() {
       // this.video = video;
+      this.path = video;
       return localDataSource.initializePlayback(video);
     });
   }
@@ -98,4 +101,7 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
 
   @override
   String get videoNameParsed => localDataSource.videoNameParsed;
+
+  @override
+  late String path;
 }

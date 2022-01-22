@@ -5,7 +5,6 @@ import 'package:backrec_flutter/features/record/data/models/team.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
 
 typedef ObjectCallback = Function(Object?);
 
@@ -26,8 +25,9 @@ class TeamSelectorDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
     return Container(
-      width: Get.width / 3,
+      width: width / 3,
       height: 50,
       decoration: BoxDecoration(
           color: GlobalColors.lightGrey,
@@ -41,7 +41,7 @@ class TeamSelectorDropdown extends StatelessWidget {
             child: FaIcon(icon, color: Colors.white, size: 20),
           ),
           Container(
-            width: Get.width / 4.2,
+            width: width / 4.2,
             height: 40,
             margin: const EdgeInsets.only(left: 3.0, bottom: 5.0, right: 5.0),
             child: Material(
@@ -80,7 +80,7 @@ class TeamSelectorDropdown extends StatelessWidget {
                             child: Padding(
                           padding: const EdgeInsets.all(15.0),
                           child: Text(suggestion.name,
-                              style: Get.textTheme.bodyText1!.copyWith(
+                              style: context.bodyText1.copyWith(
                                   color: Colors.white,
                                   fontSize: 20,
                                   fontWeight: FontWeight.w500)),

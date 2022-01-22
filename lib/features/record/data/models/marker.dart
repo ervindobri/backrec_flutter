@@ -66,17 +66,18 @@ class Marker {
     final endMilliseconds = map['end_position'] as int;
     print("$startMilliseconds $endMilliseconds");
     final List<Filter> filters = (map['filters'] as List<dynamic>).map((e) {
-      switch (e.runtimeType) {
-        case TeamFilter:
-          return TeamFilter.fromJson(e);
-        case PlayerFilter:
-          return PlayerFilter.fromJson(e);
-        case TypeFilter:
-          return TypeFilter.fromJson(e);
-        case RatingFilter:
-          return RatingFilter.fromJson(e);
+      final data = e["data"];
+      switch (e["type"]) {
+        case "team":
+          return TeamFilter.fromMap(data);
+        case "player":
+          return PlayerFilter.fromMap(data);
+        case "type":
+          return TypeFilter.fromMap(data);
+        case "rating":
+          return RatingFilter.fromMap(data);
         default:
-          return NanFilter();
+          return NanFilter.fromMap(data);
       }
     }).toList();
     return Marker(

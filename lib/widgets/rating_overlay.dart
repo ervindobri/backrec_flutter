@@ -1,7 +1,6 @@
 import 'package:backrec_flutter/core/constants/global_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:get/get.dart';
 
 typedef DoubleCallback = Function(double);
 
@@ -14,13 +13,15 @@ class RatingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
     return GestureDetector(
       onTapCancel: () {
         print("tap cancelled!");
       },
       child: Container(
-          width: Get.width,
-          height: Get.height,
+          width: width,
+          height: height,
           color: GlobalColors.primaryGrey,
           child: Center(
               child: RatingBar.builder(

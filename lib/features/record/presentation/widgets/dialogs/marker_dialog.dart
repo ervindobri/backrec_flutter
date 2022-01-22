@@ -63,6 +63,8 @@ class _MarkerDialogState extends State<MarkerDialog> {
     return LayoutBuilder(builder: (context, constraints) {
       final width = constraints.maxWidth;
       final height = constraints.maxWidth;
+      final notchPadding = MediaQuery.of(context).viewPadding;
+      print(notchPadding);
       return Stack(
         children: [
           Container(
@@ -337,7 +339,9 @@ class _MarkerDialogState extends State<MarkerDialog> {
                       ),
                       //actions
                       Positioned(
-                          bottom: 10,
+                          bottom: 20,
+                          left: notchPadding.left,
+                          right: notchPadding.right,
                           child: Container(
                             width: width,
                             // color: Colors.black,
@@ -434,7 +438,7 @@ class _MarkerDialogState extends State<MarkerDialog> {
           .toList()));
     }
 
-    if (_rating != null) {
+    if (_rating != null && _rating != 0.0) {
       filters.add(new RatingFilter(_rating!));
     }
     marker.filters = filters;

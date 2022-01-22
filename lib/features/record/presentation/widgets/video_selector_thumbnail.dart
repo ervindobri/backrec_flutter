@@ -37,8 +37,8 @@ class VideoSelectorThumbnail extends StatelessWidget {
       borderRadius: GlobalStyles.radiusAll12,
       child: InkWell(
         onTap: () async {
-          onTap();
           try {
+            onTap();
             final result = await FilePicker.platform.pickFiles(
                 type: FileType.video, allowCompression: true, withData: true);
             if (result != null && result.files.isNotEmpty) {

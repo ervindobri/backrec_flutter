@@ -68,6 +68,7 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackState> {
       } else if (event is SeekPlaybackEvent) {
         print("SeekPlaybackEvent");
         final result = await seekPlayback(event.duration);
+        add(StartPlaybackEvent());
         emit(result.fold(
           (failure) =>
               PlaybackError(_mapFailureToMessage(failure)), //todo: map errors

@@ -19,10 +19,10 @@ Future<void> main() async {
 }
 
 Future<void> setEnabledOrientations() async {
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeRight,
-    DeviceOrientation.landscapeLeft,
-  ]);
+  // await SystemChrome.setPreferredOrientations([
+  //   DeviceOrientation.landscapeRight,
+  //   DeviceOrientation.landscapeLeft,
+  // ]);
 }
 
 class MyApp extends StatelessWidget {
