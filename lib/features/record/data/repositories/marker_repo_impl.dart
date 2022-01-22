@@ -8,21 +8,42 @@ class MarkerRepositoryImpl extends MarkerRepository {
 
   @override
   Future<void> addMarker(Marker marker) async {
-    this.markers.add(marker);
+    await localDataSource.addMarker(marker);
   }
 
   @override
   Future<void> removeMarker(Marker marker) async {
-    this.markers.remove(marker);
+    await localDataSource.removeMarker(marker);
   }
 
   @override
   Future<void> setMarkers(List<Marker> markers) async {
-    this.markers = [...markers];
+    await localDataSource.setMarkers(markers);
   }
 
   @override
   Future<void> saveMarkers(String videoName) async {
     await localDataSource.saveMarkers(videoName);
+  }
+
+  @override
+  Future<void> clearMarkers() async {
+    await localDataSource.clearMarkers();
+  }
+
+  @override
+  List<Marker> getMarkers() {
+    return localDataSource.markers;
+  }
+
+  @override
+  Future<void> loadMarkers(String name) async {
+    await localDataSource.loadMarkers(name);
+  }
+
+  @override
+  Future<void> updateMarker(Marker marker) async {
+    await localDataSource.updateMarker(marker);
+    
   }
 }

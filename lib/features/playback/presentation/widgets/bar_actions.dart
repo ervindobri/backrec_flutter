@@ -1,11 +1,14 @@
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:backrec_flutter/core/constants/constants.dart';
 import 'package:backrec_flutter/core/constants/global_strings.dart';
+import 'package:backrec_flutter/core/extensions/string_ext.dart';
 import 'package:backrec_flutter/core/extensions/text_theme_ext.dart';
+import 'package:backrec_flutter/core/utils/nav_utils.dart';
 import 'package:backrec_flutter/core/utils/ui_utils.dart';
 import 'package:backrec_flutter/features/playback/domain/repositories/playback_repository.dart';
+import 'package:backrec_flutter/features/playback/presentation/bloc/playback_bloc.dart';
+import 'package:backrec_flutter/features/playback/presentation/widgets/confirm_dialog.dart';
 import 'package:backrec_flutter/features/record/data/models/team.dart';
-import 'package:backrec_flutter/features/record/domain/repositories/marker_repository.dart';
 import 'package:backrec_flutter/features/record/presentation/cubit/marker_cubit.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/dialogs/marker_dialog.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/dialogs/team_selector_dialog.dart';
@@ -34,11 +37,14 @@ class VideoPlayerActions extends StatelessWidget {
   final Team? homeTeam;
   final Team? awayTeam;
   final TeamSelectionCallback setTeams;
+  final VoidCallback onMarkerPlayback;
+
   const VideoPlayerActions(
       {Key? key,
       required this.onPlay,
       required this.onPause,
       required this.onJumpBackward,
+      required this.onMarkerPlayback,
       required this.onJumpForward,
       // required this.markers,
       this.totalDuration = Duration.zero,
@@ -56,7 +62,9 @@ class VideoPlayerActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    final markers = context.select((MarkerRepository repo) => repo.markers);
+    final double progressBarPos = 50.0;
+    final markers = context.select((MarkerCubit cubit) => cubit.markers);
+    final barWidth = width - 100; // width - leftlabel, rightlabel and paddings
     return Container(
       width: width,
       height: 150,
@@ -66,7 +74,7 @@ class VideoPlayerActions extends StatelessWidget {
         children: [
           //actions - prev, next marker
           Positioned(
-            bottom: 60,
+            bottom: progressBarPos + 20,
             left: 0,
             child: Container(
               height: height * .15,
@@ -75,10 +83,11 @@ class VideoPlayerActions extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Tooltip(
-                    message: 'Jump to previous marker',
+                    message: GlobalStrings.jumpToPreviousMarkerTooltip,
                     child: IconButton(
                       onPressed: onJumpBackward,
                       iconSize: 20,
+                      padding: EdgeInsets.zero,
                       icon: Container(
                         width: 34,
                         height: 34,
@@ -94,16 +103,18 @@ class VideoPlayerActions extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    // color: Colors.black,
-                    width: width * .8,
+                    width: barWidth,
                     height: 50,
+                    // color: Colors.black,
                     child: Stack(
                         children: markers
                             .map(
                               (e) => MarkerPin(
                                 marker: e,
-                                totalWidth: width * .8,
+                                totalWidth: width - 132,
                                 onMarkerTap: () {
+                                  e.id = markers
+                                      .indexOf(e); //set index if non existent
                                   onMarkerTap(e);
                                 },
                                 totalDuration: totalDuration,
@@ -112,9 +123,10 @@ class VideoPlayerActions extends StatelessWidget {
                             .toList()),
                   ),
                   Tooltip(
-                    message: 'Jump to next marker',
+                    message: GlobalStrings.jumpToNextMarkerTooltip,
                     child: IconButton(
                       iconSize: 20,
+                      padding: EdgeInsets.zero,
                       onPressed: onJumpForward,
                       icon: Container(
                         width: 34,
@@ -137,7 +149,7 @@ class VideoPlayerActions extends StatelessWidget {
           // playback bar with markers on it,
           ,
           Positioned(
-            bottom: 40,
+            bottom: progressBarPos,
             left: 0,
             child: Container(
               width: width,
@@ -154,7 +166,9 @@ class VideoPlayerActions extends StatelessWidget {
                         timeLabelTextStyle:
                             context.bodyText1.copyWith(color: Colors.white),
                         thumbColor: Colors.white,
-                        baseBarColor: GlobalColors.primaryGrey.withOpacity(.3),
+                        timeLabelType: TimeLabelType.remainingTime,
+                        baseBarColor: GlobalColors.primaryRed.withOpacity(.2),
+                        barHeight: 10,
                         progressBarColor: GlobalColors.primaryRed,
                         onSeek: (duration) {
                           onSeek(duration);
@@ -194,6 +208,15 @@ class VideoPlayerActions extends StatelessWidget {
                                   onPressed: () {
                                     onPause();
                                   }),
+                        ),
+                        TextButton.icon(
+                          icon: Icon(FeatherIcons.playCircle,
+                              color: GlobalColors.primaryRed),
+                          label: Text(GlobalStrings.playback,
+                              style: context.bodyText1.copyWith(
+                                  decoration: TextDecoration.underline,
+                                  color: GlobalColors.primaryRed)),
+                          onPressed: onMarkerPlayback,
                         ),
                         ValueListenableBuilder<bool>(
                           valueListenable: ValueNotifier(
@@ -247,20 +270,32 @@ class VideoPlayerActions extends StatelessWidget {
                                   style: context.bodyText1
                                       .copyWith(color: Colors.white)),
                               icon: FaIcon(FontAwesomeIcons.save,
-                                  color: Colors.white),
+                                  size: 20, color: Colors.white),
                               onPressed: () {
-                                final video = sl<PlaybackRepository>().video;
+                                final videoName = context
+                                    .read<PlaybackRepository>()
+                                    .videoNameParsed;
+                                print(videoName.parsed);
                                 context
                                     .read<MarkerCubit>()
-                                    .saveData(video.path);
+                                    .saveData(videoName.parsed);
                               },
                             ),
                           ),
                           IconButton(
-                            icon: FaIcon(FontAwesomeIcons.trashAlt,
-                                color: Colors.white),
+                            icon: FaIcon(FeatherIcons.trash,
+                                size: 20, color: Colors.white),
                             onPressed: () {
-                              //TODO: delete original long video
+                              final playbackBloc = context.read<PlaybackBloc>();
+                              showDialog(
+                                  context: context,
+                                  useSafeArea: false,
+                                  builder: (context) =>
+                                      ConfirmationDialog(onConfirm: () {
+                                        playbackBloc.add(DeletePlaybackEvent());
+                                        NavUtils.back(context);
+                                        NavUtils.toRecording(context);
+                                      }));
                             },
                           ),
                         ],

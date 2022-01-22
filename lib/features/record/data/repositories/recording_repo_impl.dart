@@ -14,13 +14,6 @@ class RecordingRepositoryImpl extends RecordingRepository {
   final RecordingLocalDataSource localDataSource;
   RecordingRepositoryImpl({required this.localDataSource});
 
-  @override
-  Future<Either<Failure, String>> setMarkers(List<Marker> markers) async {
-    return await _action(() {
-      return localDataSource.setMarkers(markers);
-    });
-  }
-
   Future<Either<Failure, String>> _action(
     _UsecaseChooser getUsecase,
   ) async {

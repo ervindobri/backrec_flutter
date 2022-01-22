@@ -23,15 +23,17 @@ class OverlayActions extends StatelessWidget {
       alignment: Alignment.center,
       child: AnimatedOpacity(
         duration: Duration(milliseconds: 300),
-        opacity: inFocus ? 0.0 : .5,
+        opacity: inFocus ? 0.0 : 1,
         child: InkWell(
           onTap: setFocus,
+          overlayColor: MaterialStateProperty.all(Colors.transparent),
+          highlightColor: Colors.transparent,
           child: Visibility(
             visible: !inFocus,
             child: Container(
               width: width,
               height: height,
-              color: GlobalColors.primaryGrey.withOpacity(1.0),
+              color: Colors.transparent,
               child: AnimatedSwitcher(
                 duration: Duration(milliseconds: 500),
                 child: IconButton(

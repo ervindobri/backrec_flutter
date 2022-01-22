@@ -18,7 +18,8 @@ class InitializePlayback implements UseCase<VideoPlayerController, InitParams> {
 }
 
 class InitParams extends Equatable {
-  final XFile video;
+  // final XFile video;
+  final String video;
 
   InitParams(this.video);
 

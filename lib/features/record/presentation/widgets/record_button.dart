@@ -1,3 +1,4 @@
+import 'package:backrec_flutter/core/constants/constants.dart';
 import 'package:backrec_flutter/core/constants/global_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -14,49 +15,31 @@ class RecordButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 55,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(50),
-        child: TextButton(
-            onPressed: onRecord,
-            style: ButtonStyle(
-                padding: MaterialStateProperty.all(EdgeInsets.zero)),
-            child: Center(
-              child: Container(
-                width: 55,
-                height: 55,
-                decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.white,
-                      width: 3,
-                    ),
-                    shape: BoxShape.circle),
-                child: Padding(
-                  padding: const EdgeInsets.all(3.0),
-                  child: AnimatedSwitcher(
-                    duration: Duration(milliseconds: 300),
-                    switchInCurve: Curves.easeInOut,
-                    switchOutCurve: Curves.easeInOut,
-                    child: _recordingStarted
-                        ? Container(
-                            width: 30,
-                            height: 30,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                color: GlobalColors.primaryRed),
-                          )
-                        : Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(100),
-                                color: GlobalColors.primaryRed),
-                          ),
-                  ),
-                ),
-              ),
-            )),
+    return IconButton(
+      iconSize: 56,
+      onPressed: onRecord,
+      padding: EdgeInsets.zero,
+      icon: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+            border: GlobalStyles.whiteBorder(), shape: BoxShape.circle),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: AnimatedContainer(
+              width: _recordingStarted ? 32 : 50,
+              height: _recordingStarted ? 32 : 50,
+              duration: kThemeAnimationDuration,
+              curve: Curves.easeInBack,
+              decoration: BoxDecoration(
+                  borderRadius: _recordingStarted
+                      ? BorderRadius.circular(8)
+                      : BorderRadius.circular(50),
+                  color: GlobalColors.primaryRed),
+            ),
+          ),
+        ),
       ),
     );
   }

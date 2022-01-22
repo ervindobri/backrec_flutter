@@ -34,17 +34,21 @@ dependencies:
   get: ^4.2.4
   font_awesome_flutter: ^9.1.0
   google_fonts: ^2.1.0
-  # camerawesome: ^0.3.0+1
+  
   camera: ^0.9.4+5
   video_player: ^2.2.10
+  file_picker: ^4.3.1
+  # flutter_ffmpeg: ^0.4.2 
   flutter_feather_icons: ^2.0.0+1
-  flutter_typeahead: ^3.2.0
   gallery_saver: ^2.1.2
-  # video_thumbnail: ^0.3.3
-  audio_video_progress_bar: ^0.6.1
+  audio_video_progress_bar: ^0.10.0
   image_picker: ^0.8.2
+
+  # video_thumbnail: ^0.3.3
+  flutter_typeahead: ^3.2.0
   flutter_rating_bar: ^4.0.0
   fluttertoast: ^8.0.8
+  
   vibration: ^1.7.4-nullsafety.0
   path_provider: ^2.0.2
   native_device_orientation: ^1.0.0

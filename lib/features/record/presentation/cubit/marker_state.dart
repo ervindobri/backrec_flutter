@@ -9,7 +9,11 @@ abstract class MarkerState extends Equatable {
 
 class MarkerInitial extends MarkerState {}
 class MarkerLoading extends MarkerState {}
+
 class MarkerLoaded extends MarkerState {}
+class MarkerCleared extends MarkerState {}
+
 class MarkerAdded extends MarkerState {}
 class MarkerRemoved extends MarkerState {}
+
 class MarkerSaved extends MarkerState {}

@@ -29,3 +29,8 @@ class RecordingFailure extends Failure {
 
   RecordingFailure(this.message);
 }
+
+class PlaybackFailure extends Failure {
+  final String message;
+  PlaybackFailure(this.message);
+}

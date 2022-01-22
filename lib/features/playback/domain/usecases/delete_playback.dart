@@ -3,14 +3,14 @@ import 'package:backrec_flutter/core/usecases/usecase.dart';
 import 'package:backrec_flutter/features/playback/domain/repositories/playback_repository.dart';
 import 'package:dartz/dartz.dart';
 
-class StartPlayback implements UseCase<String, dynamic> {
+class DeletePlayback implements UseCase<String, dynamic> {
   final PlaybackRepository repository;
 
-  StartPlayback(this.repository);
+  DeletePlayback(this.repository);
 
   @override
-  Future<Either<Failure, String>> call(dynamic params) async {
-    return await repository.startPlayback();
+  Future<Either<Failure, String>> call(dynamic ) async {
+    return await repository.deletePlayback();
   }
 }
 

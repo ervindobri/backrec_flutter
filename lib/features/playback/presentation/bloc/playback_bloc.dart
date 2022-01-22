@@ -1,12 +1,13 @@
 import 'package:backrec_flutter/core/error/failures.dart';
+import 'package:backrec_flutter/features/playback/domain/usecases/delete_playback.dart';
 import 'package:backrec_flutter/features/playback/domain/usecases/init_playback.dart';
 import 'package:backrec_flutter/features/playback/domain/usecases/init_thumbnail.dart';
 import 'package:backrec_flutter/features/playback/domain/usecases/pause_playback.dart';
 import 'package:backrec_flutter/features/playback/domain/usecases/seek_playback.dart';
 import 'package:backrec_flutter/features/playback/domain/usecases/start_playback.dart';
+import 'package:backrec_flutter/features/record/data/models/marker.dart';
 import 'package:bloc/bloc.dart';
 import 'package:camera/camera.dart';
-import 'package:dartz/dartz.dart';
 import 'package:meta/meta.dart';
 import 'package:video_player/video_player.dart';
 
@@ -19,25 +20,28 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackState> {
   final StartPlayback startPlayback;
   final PausePlayback pausePlayback;
   final SeekPlayback seekPlayback;
+  final DeletePlayback deletePlayback;
+
   PlaybackBloc({
     required this.initThumbnail,
     required this.initializePlayback,
     required this.startPlayback,
     required this.seekPlayback,
+    required this.deletePlayback,
     required this.pausePlayback,
   }) : super(PlaybackInitial()) {
     on<PlaybackEvent>((event, emit) async {
       if (event is InitializeThumbnailEvent) {
         print("InitializeThumbnailEvent - ${event.video.name}");
         emit(PlaybackInitializing());
-        final result = await initThumbnail(InitParams(event.video));
+        final result = await initThumbnail(InitParams(event.video.name));
         emit(result.fold(
           (failure) =>
               PlaybackError(_mapFailureToMessage(failure)), //todo: map errors
           (controller) => ThumbnailInitialized(controller),
         ));
       } else if (event is InitializePlaybackEvent) {
-        print("InitializePlaybackEvent - ${event.video.name}");
+        print("InitializePlaybackEvent - ${event.video}");
         emit(PlaybackInitializing());
         final result = await initializePlayback(InitParams(event.video));
         emit(result.fold(
@@ -69,22 +73,35 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackState> {
               PlaybackError(_mapFailureToMessage(failure)), //todo: map errors
           (controller) => PlaybackPlaying(),
         ));
+      } else if (event is DeletePlaybackEvent) {
+        print("DeletePlaybackEvent");
+        final result = await deletePlayback(null);
+        emit(result.fold(
+          (failure) =>
+              PlaybackError(_mapFailureToMessage(failure)), //todo: map errors
+          (controller) => PlaybackDeleted(),
+        ));
+      } else if (event is MarkerPlaybackEvent) {
+        print("MarkerPlaybackEvent");
+        add(StartPlaybackEvent());
+        //TODO: sort markers by time
+        event.markers
+            .sort((a, b) => a.startPosition.compareTo(b.startPosition));
+        final sortedMarkers = event.markers;
+        for (var marker in sortedMarkers) {
+          final result = await seekPlayback(marker.startPosition);
+          emit(result.fold(
+            (failure) =>
+                PlaybackError(_mapFailureToMessage(failure)), //todo: map errors
+            (controller) => MarkerPlayback(marker),
+          ));
+          //wait clipLength before next clip
+          await Future.delayed(Duration(seconds: 12, milliseconds: 500));
+        }
+        add(StopPlaybackEvent());
+      } else {
+        //other event
       }
-      // if (event is InitializePlaybackEvent) {
-      //   emit(PlaybackInitializing());
-      //   final markers = recordService.markers;
-      //   await service.initialize(
-      //       markers, event.video, event.looping, event.hasVolume);
-      //   emit(PlaybackInitialized());
-      // } else if (event is StartPlaybackEvent) {
-      //   print("StartPlaybackEvent");
-      //   await service.onPlay();
-      //   emit(PlaybackPlaying());
-      // } else if (event is StopPlaybackEvent) {
-      //   print("StopPlaybackEvent");
-      //   await service.onPause();
-      //   emit(PlaybackStopped());
-      // }
     });
   }
 
@@ -92,6 +109,8 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackState> {
     switch (failure.runtimeType) {
       case RecordingFailure:
         return (failure as RecordingFailure).message;
+      case PlaybackFailure:
+        return (failure as PlaybackFailure).message;
       default:
         return failure.toString();
     }

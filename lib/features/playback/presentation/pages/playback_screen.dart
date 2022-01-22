@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:backrec_flutter/core/constants/global_colors.dart';
+import 'package:backrec_flutter/core/extensions/list_ext.dart';
 import 'package:backrec_flutter/core/extensions/text_theme_ext.dart';
 import 'package:backrec_flutter/core/utils/nav_utils.dart';
 import 'package:backrec_flutter/core/utils/ui_utils.dart';
+import 'package:backrec_flutter/features/playback/domain/repositories/playback_repository.dart';
 import 'package:backrec_flutter/features/playback/presentation/bloc/playback_bloc.dart';
 import 'package:backrec_flutter/features/playback/presentation/widgets/bar_actions.dart';
 import 'package:backrec_flutter/features/playback/presentation/widgets/marker_info.dart';
@@ -11,12 +13,12 @@ import 'package:backrec_flutter/features/record/data/models/marker.dart';
 import 'package:backrec_flutter/features/record/data/models/team.dart';
 import 'package:backrec_flutter/features/record/domain/repositories/marker_repository.dart';
 import 'package:backrec_flutter/features/record/presentation/cubit/marker_cubit.dart';
+import 'package:backrec_flutter/features/record/presentation/widgets/dialogs/marker_dialog.dart';
 import 'package:backrec_flutter/injection_container.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/add_marker_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
-import 'package:get/get_navigation/src/root/parse_route.dart';
 import 'package:vibration/vibration.dart';
 import 'package:video_player/video_player.dart';
 
@@ -71,6 +73,7 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
+    final notchPadding = MediaQuery.of(context).viewPadding;
     return Scaffold(
         body: SafeArea(
       child: BlocConsumer<PlaybackBloc, PlaybackState>(
@@ -78,6 +81,12 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
           if (state is PlaybackInitialized) {
             controller = state.controller;
             controller.addListener(videoPlayerListener);
+          } else if (state is PlaybackError) {
+            print(state.message);
+          } else if (state is MarkerPlayback) {
+            setState(() {
+              currentMarker = state.marker;
+            });
           }
         },
         buildWhen: (oldState, newState) =>
@@ -98,12 +107,25 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                       width: width,
                       height: height,
                       child: Stack(
+                        alignment: Alignment.center,
                         children: [
-                          GestureDetector(
+                          FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: value.size.width,
+                              height: value.size.height,
+                              child: VideoPlayer(controller),
+                            ),
+                          ),
+                          SizedBox(
+                            height: height,
+                            width: width,
+                            child: GestureDetector(
                               onTap: () {
                                 setFocus(isPlaying);
                               },
-                              child: VideoPlayer(controller)),
+                            ),
+                          ),
                           //big play button
                           OverlayActions(
                             setFocus: () {
@@ -125,106 +147,103 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                             isPlaying: isPlaying,
                           ),
                           //back
-                          TextButton.icon(
-                              onPressed: () {
-                                NavUtils.back(context);
-                                context
-                                    .read<PlaybackBloc>()
-                                    .add(PlaybackVolumeEvent(0.0));
-                              },
-                              icon: Icon(FeatherIcons.chevronLeft,
-                                  color: Colors.white, size: 20),
-                              label: Text(
-                                "Record",
-                                style: context.bodyText1.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    decoration: TextDecoration.underline),
-                              )),
+                          Positioned(
+                            left: 20,
+                            top: 20,
+                            child: TextButton.icon(
+                                onPressed: () {
+                                  NavUtils.back(context);
+                                  context
+                                      .read<PlaybackBloc>()
+                                      .add(PlaybackVolumeEvent(0.0));
+                                },
+                                icon: Icon(FeatherIcons.chevronLeft,
+                                    color: Colors.white, size: 20),
+                                label: Text(
+                                  "Record",
+                                  style: context.bodyText1.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      decoration: TextDecoration.underline),
+                                )),
+                          ),
                           //bottom bar, actions and buttons
                           AnimatedPositioned(
                             bottom: _inFocus ? -30 : 0,
                             duration: kThemeAnimationDuration,
-                            child: RepositoryProvider(
-                              create: (context) => sl<MarkerRepository>(),
-                              child: BlocProvider(
-                                create: (context) => sl<MarkerCubit>(),
-                                child: VideoPlayerActions(
-                                  onPause: () {
-                                    context
-                                        .read<PlaybackBloc>()
-                                        .add(StopPlaybackEvent());
-                                    setFocus(true);
-                                  },
-                                  onPlay: () {
-                                    context
-                                        .read<PlaybackBloc>()
-                                        .add(StartPlaybackEvent());
-                                    setFocus(true);
-                                  },
-                                  onMarkerTap: (marker) {
-                                    context.read<PlaybackBloc>().add(
-                                        SeekPlaybackEvent(marker.endPosition));
-                                    currentMarker = marker;
-                                  },
-                                  onJumpBackward: () {
-                                    Vibration.vibrate();
-                                    jumpToPreviousMarker(elapsed);
-                                  },
-                                  onJumpForward: () {
-                                    Vibration.vibrate();
-                                    jumpToNextMarker(elapsed);
-                                  },
-                                  // markers: markers,
-                                  controller: controller,
-                                  inFocus: _inFocus,
-                                  isPlaying: isPlaying,
-                                  awayTeam: widget.awayTeam,
-                                  homeTeam: widget.homeTeam,
-                                  totalDuration: totalDuration,
-                                  onSeek: (duration) {
-                                    context
-                                        .read<PlaybackBloc>()
-                                        .add(SeekPlaybackEvent(duration));
-                                  },
-                                  setTeams: (home, away) {},
+                            child: MultiRepositoryProvider(
+                              providers: [
+                                RepositoryProvider(
+                                  create: (context) => sl<MarkerRepository>(),
+                                ),
+                                RepositoryProvider(
+                                  create: (context) => sl<PlaybackRepository>(),
+                                ),
+                              ],
+                              child: MultiBlocProvider(
+                                providers: [
+                                  BlocProvider(
+                                    create: (context) => sl<MarkerCubit>(),
+                                  ),
+                                  BlocProvider(
+                                    create: (context) => sl<PlaybackBloc>(),
+                                  ),
+                                ],
+                                child: Padding(
+                                  padding: notchPadding,
+                                  child: VideoPlayerActions(
+                                      onPause: () {
+                                        context
+                                            .read<PlaybackBloc>()
+                                            .add(StopPlaybackEvent());
+                                        setFocus(true);
+                                      },
+                                      onPlay: () {
+                                        context
+                                            .read<PlaybackBloc>()
+                                            .add(StartPlaybackEvent());
+                                        setFocus(true);
+                                      },
+                                      onMarkerTap: (marker) {
+                                        print("Seek: ${marker.endPosition}");
+                                        context.read<PlaybackBloc>().add(
+                                            SeekPlaybackEvent(
+                                                marker.endPosition));
+                                        currentMarker = marker;
+                                      },
+                                      onJumpBackward: () {
+                                        UiUtils.vibrate();
+                                        jumpToPreviousMarker(elapsed);
+                                      },
+                                      onJumpForward: () {
+                                        UiUtils.vibrate();
+                                        jumpToNextMarker(elapsed);
+                                      },
+                                      // markers: markers,
+                                      controller: controller,
+                                      inFocus: _inFocus,
+                                      isPlaying: isPlaying,
+                                      awayTeam: widget.awayTeam,
+                                      homeTeam: widget.homeTeam,
+                                      totalDuration: totalDuration,
+                                      onSeek: (duration) {
+                                        print("Seek: $duration");
+                                        context
+                                            .read<PlaybackBloc>()
+                                            .add(SeekPlaybackEvent(duration));
+                                      },
+                                      setTeams: (home, away) {},
+                                      onMarkerPlayback: () {
+                                        final markers =
+                                            context.read<MarkerCubit>().markers;
+                                        context
+                                            .read<PlaybackBloc>()
+                                            .add(MarkerPlaybackEvent(markers));
+                                      }),
                                 ),
                               ),
                             ),
                           ),
-                          Positioned(
-                              right: 10,
-                              top: 10,
-                              child: Tooltip(
-                                  message: 'Add new marker',
-                                  verticalOffset: 30,
-                                  decoration: BoxDecoration(
-                                      color: GlobalColors.primaryRed,
-                                      borderRadius: BorderRadius.circular(10)),
-                                  child: NewMarkerButton(
-                                    endPosition: elapsed,
-                                    homeTeam: widget.homeTeam,
-                                    awayTeam: widget.awayTeam,
-                                    onTap: () async {
-                                      context
-                                          .read<PlaybackBloc>()
-                                          .add(StopPlaybackEvent());
-                                      setFocus(true);
-                                    },
-                                    onCancel: () async {
-                                      // if (isPlaying) {
-                                      // await controller.play();
-                                      // }
-                                    },
-                                    onMarkerConfigured: (marker) async {
-                                      // service.saveMarker(marker);
-                                      UiUtils.showToast(
-                                          "Marker created successfully!");
-                                      context
-                                          .read<MarkerCubit>()
-                                          .addMarker(marker);
-                                    },
-                                  ))),
                           Align(
                               alignment: Alignment.topCenter,
                               child: ValueListenableBuilder<Marker?>(
@@ -240,9 +259,64 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                                         homeTeam: widget.homeTeam,
                                         awayTeam: widget.awayTeam,
                                         visible: isMarkerVisible,
+                                        onMarkerConfigured: (marker) {
+                                          context
+                                              .read<MarkerCubit>()
+                                              .updateMarker(marker);
+                                          setState(() {});
+                                        },
+                                        onDelete: () {
+                                          context
+                                              .read<MarkerCubit>()
+                                              .removeMarker(currentMarker!);
+                                          setState(() {});
+                                        },
                                       ),
                                     );
                                   })),
+                          Positioned(
+                              right: 20,
+                              top: 20,
+                              child: Tooltip(
+                                  message: 'Add new marker',
+                                  verticalOffset: 30,
+                                  decoration: BoxDecoration(
+                                      color: GlobalColors.primaryRed,
+                                      borderRadius: BorderRadius.circular(10)),
+                                  child: NewMarkerButton(
+                                    endPosition: elapsed,
+                                    onTap: () async {
+                                      context
+                                          .read<PlaybackBloc>()
+                                          .add(StopPlaybackEvent());
+                                      setFocus(true);
+                                      final interfering = context
+                                          .read<MarkerCubit>()
+                                          .isInterfereing(elapsed);
+                                      if (!interfering) {
+                                        showDialog(
+                                            context: context,
+                                            builder: (_) => MarkerDialog(
+                                                  endPosition: elapsed,
+                                                  homeTeam: widget.homeTeam,
+                                                  awayTeam: widget.awayTeam,
+                                                  onMarkerConfigured: (marker) {
+                                                    // service.saveMarker(marker);
+                                                    UiUtils.showToast(
+                                                        "Marker created successfully!");
+                                                    context
+                                                        .read<MarkerCubit>()
+                                                        .addMarker(marker);
+                                                    setState(() {});
+                                                  },
+                                                  onCancel: () {},
+                                                  onDelete: () {
+                                                    // context.read<MarkerCubit>().removeMarker(marker);
+                                                  },
+                                                ));
+                                      }
+                                    },
+                                  ))),
                         ],
                       ));
                 });
@@ -264,50 +338,24 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
   }
 
   void jumpToPreviousMarker(Duration elapsed) {
-    final markers = context.read<MarkerCubit>().markers();
-    if (markers.length > 0) {
-      var closest = markers.reduce((a, b) =>
-          (a.endPosition.inMilliseconds - elapsed.inMilliseconds).abs() <
-                  (b.endPosition.inMilliseconds - elapsed.inMilliseconds).abs()
-              ? a
-              : b);
-      if (closest.endPosition != Duration.zero) {
-        context
-            .read<PlaybackBloc>()
-            .add(SeekPlaybackEvent(closest.startPosition));
-      }
+    final prevMarker = context.read<MarkerCubit>().findPreviousMarker(elapsed);
+    if (prevMarker != null) {
+      context
+          .read<PlaybackBloc>()
+          .add(SeekPlaybackEvent(prevMarker.startPosition));
     }
   }
 
   void jumpToNextMarker(Duration elapsed) {
-    final markers = context.read<MarkerCubit>().markers();
-    if (markers.length > 0) {
-      Marker firstMarker = markers.firstWhere(
-          (element) => element.startPosition > elapsed,
-          orElse: () => Marker());
-      if (firstMarker.endPosition != Duration.zero) {
-        context
-            .read<PlaybackBloc>()
-            .add(SeekPlaybackEvent(firstMarker.startPosition));
-      }
+    final nextMarker = context.read<MarkerCubit>().findNextMarker(elapsed);
+    if (nextMarker != null) {
+      context
+          .read<PlaybackBloc>()
+          .add(SeekPlaybackEvent(nextMarker.startPosition));
     }
   }
 
   bool markerVisible(Duration elapsed) {
-    final markers = context.read<MarkerCubit>().markers();
-    // if (currentMarker != null) {
-    //   return this.currentMarker!.endPosition.compareTo(elapsed) >= 0;
-    // }
-    if (markers.isNotEmpty) {
-      final Marker? nextMarker = markers.firstWhereOrNull(
-        (element) =>
-            element.startPosition.compareTo(elapsed) < 0 &&
-            element.endPosition.compareTo(elapsed) >= 0,
-      );
-      if (nextMarker != null) {
-        return nextMarker.endPosition.compareTo(elapsed) >= 0;
-      }
-    }
-    return false;
+    return context.read<MarkerCubit>().markerVisible(elapsed);
   }
 }

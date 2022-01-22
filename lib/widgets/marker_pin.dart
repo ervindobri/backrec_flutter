@@ -20,12 +20,18 @@ class MarkerPin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final position =
+        calculatePosition(marker.endPosition, totalDuration, totalWidth);
+    // final width = MediaQuery.of(context).size.width;
     return Positioned(
       bottom: 0,
-      left: calculatePosition(marker.endPosition, totalDuration, totalWidth),
-      child: InkWell(
-        onTap: onMarkerTap,
-        child: Container(
+      left: position,
+      child: IconButton(
+        onPressed: onMarkerTap,
+        highlightColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        padding: EdgeInsets.zero,
+        icon: Container(
           width: 30,
           height: 60,
           child: Stack(
@@ -35,7 +41,8 @@ class MarkerPin extends StatelessWidget {
                 left: 5,
                 child: CustomPaint(
                     size: Size(20, 20),
-                    painter: DrawTriangleShape(color: GlobalColors.primaryRed)),
+                    painter:
+                        DrawTriangleShape(color: GlobalColors.secondaryRed)),
               ),
               Positioned(
                 bottom: 10,
@@ -43,7 +50,8 @@ class MarkerPin extends StatelessWidget {
                     width: 30,
                     height: 30,
                     decoration: BoxDecoration(
-                        shape: BoxShape.circle, color: GlobalColors.primaryRed),
+                        shape: BoxShape.circle,
+                        color: GlobalColors.secondaryRed),
                     child: Center(
                       child: FaIcon(FontAwesomeIcons.volleyballBall,
                           color: Colors.white, size: 15),
@@ -58,8 +66,8 @@ class MarkerPin extends StatelessWidget {
 
   double calculatePosition(
       Duration endPosition, Duration totalDuration, double totalWidth) {
-    var rate = ((endPosition.inMilliseconds / 1000) * totalWidth) /
-        (totalDuration.inMilliseconds / 1000);
+    final rate = (endPosition.inMilliseconds * totalWidth) /
+        totalDuration.inMilliseconds;
     return rate - 8; // 17pixel offset
   }
 }

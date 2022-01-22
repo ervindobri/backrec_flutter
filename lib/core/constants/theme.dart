@@ -25,42 +25,48 @@ class BackrecTheme {
 
   static TextTheme get textTheme => TextTheme(
         caption: GoogleFonts.poppins(
-            fontSize: 12, fontWeight: FontWeight.w400, color: GlobalColors.primaryGrey),
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: GlobalColors.primaryGrey),
         subtitle1: GoogleFonts.poppins(
-            fontSize: 16, fontWeight: FontWeight.w500, color: GlobalColors.primaryGrey),
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: GlobalColors.primaryGrey),
         subtitle2: GoogleFonts.poppins(
-            fontSize: 16, fontWeight: FontWeight.w400, color: GlobalColors.primaryGrey),
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            color: GlobalColors.primaryGrey),
         bodyText1: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: GlobalColors.textColor),
+            color: GlobalColors.primaryGrey),
         bodyText2: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            color: GlobalColors.textColor),
+            color: GlobalColors.primaryGrey),
         headline6: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w500,
-            color: GlobalColors.textColor),
+            color: GlobalColors.primaryGrey),
         headline5: GoogleFonts.poppins(
             fontSize: 24,
             fontWeight: FontWeight.w500,
-            color: GlobalColors.textColor),
+            color: GlobalColors.primaryGrey),
         headline4: GoogleFonts.poppins(
             fontSize: 28,
             fontWeight: FontWeight.w500,
-            color: GlobalColors.textColor),
+            color: GlobalColors.primaryGrey),
         headline3: GoogleFonts.poppins(
             fontSize: 32,
             fontWeight: FontWeight.w500,
-            color: GlobalColors.textColor),
+            color: GlobalColors.primaryGrey),
         headline2: GoogleFonts.poppins(
             fontSize: 36,
             fontWeight: FontWeight.w500,
-            color: GlobalColors.textColor),
+            color: GlobalColors.primaryGrey),
         headline1: GoogleFonts.poppins(
             fontSize: 40,
             fontWeight: FontWeight.w500,
-            color: GlobalColors.textColor),
+            color: GlobalColors.primaryGrey),
       );
 }

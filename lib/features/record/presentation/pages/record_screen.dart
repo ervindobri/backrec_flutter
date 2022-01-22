@@ -8,6 +8,7 @@ import 'package:backrec_flutter/features/record/presentation/bloc/record_bloc.da
 import 'package:backrec_flutter/features/record/presentation/bloc/timer_bloc.dart';
 import 'package:backrec_flutter/features/record/presentation/cubit/marker_cubit.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/add_marker_button.dart';
+import 'package:backrec_flutter/features/record/presentation/widgets/dialogs/marker_dialog.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/record_button.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/recorded_thumbnail.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/team_selector.dart';
@@ -38,84 +39,85 @@ class _RecordScreenState extends State<RecordScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: Colors.black,
-        body: MultiBlocListener(
-          listeners: [
-            BlocListener<RecordBloc, RecordState>(
-              listener: (context, state) {
-                UiUtils.showToast(state.toString());
-                print(state);
-                if (state is RecordingError) {
-                  print(state.message);
-                  setState(() => recording = false);
-                } else if (state is RecordingStarted) {
-                  setState(() => recording = true);
-                } else if (state is RecordingStopped) {
-                  setState(() {
-                    alreadyRecorded = true;
-                    recording = false;
-                    video = state.video;
-                  });
-                }
-              },
-            ),
-            BlocListener<TimerBloc, TimerState>(
-              listener: (context, state) {
-                // print(state);
-              },
-            ),
-          ],
-          child:
-              BlocBuilder<CameraBloc, CameraState>(builder: (context, state) {
-            Widget loadedWidget = SizedBox();
-            if (state is CameraLoading) {
-              loadedWidget = Center(
-                child:
-                    CircularProgressIndicator(color: GlobalColors.primaryRed),
-              );
-            } else if (state is CameraInitialized) {
-              loadedWidget = _cameraPreviewWidget(state.controller);
-            }
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                loadedWidget, //camera
-                BlocProvider(
-                  create: (context) => context.read<TimerBloc>(),
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: ValueNotifier(recording),
-                    builder: (context, value, child) {
-                      if (value) {
-                        return child!;
-                      }
-                      return SizedBox();
-                    },
-                    child: Align(
-                      alignment: Alignment.topLeft,
-                      child: RecordTime(),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 10.0),
-                    child: TeamSelector(
-                      setTeams: (home, away) {
-                        setState(() {
-                          homeTeam = home;
-                          awayTeam = away;
-                        });
+    final notchPadding = MediaQuery.of(context).viewPadding;
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+          backgroundColor: Colors.white,
+          body: MultiBlocListener(
+            listeners: [
+              BlocListener<RecordBloc, RecordState>(
+                listener: (context, state) {
+                  UiUtils.showToast(state.toString());
+                  print(state);
+                  if (state is RecordingError) {
+                    print(state.message);
+                    setState(() => recording = false);
+                  } else if (state is RecordingStarted) {
+                    setState(() => recording = true);
+                  } else if (state is RecordingStopped) {
+                    setState(() {
+                      alreadyRecorded = true;
+                      recording = false;
+                      video = state.video;
+                    });
+                  }
+                },
+              ),
+              BlocListener<TimerBloc, TimerState>(
+                listener: (context, state) {
+                  // print(state);
+                },
+              ),
+            ],
+            child:
+                BlocBuilder<CameraBloc, CameraState>(builder: (context, state) {
+              Widget loadedWidget = SizedBox();
+              if (state is CameraLoading) {
+                loadedWidget = Center(
+                  child:
+                      CircularProgressIndicator(color: GlobalColors.primaryRed),
+                );
+              } else if (state is CameraInitialized) {
+                loadedWidget = _cameraPreviewWidget(state.controller);
+              }
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  loadedWidget, //camera
+                  BlocProvider(
+                    create: (context) => context.read<TimerBloc>(),
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: ValueNotifier(recording),
+                      builder: (context, value, child) {
+                        if (value) {
+                          return child!;
+                        }
+                        return SizedBox();
                       },
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: RecordTime(),
+                      ),
                     ),
                   ),
-                ),
-                Positioned(
-                  right: 20,
-                  child: BlocBuilder<RecordBloc, RecordState>(
-                      builder: (context, state) {
-                    return RecordButton(
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 20.0),
+                      child: TeamSelector(
+                        setTeams: (home, away) {
+                          setState(() {
+                            homeTeam = home;
+                            awayTeam = away;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 20 + notchPadding.right,
+                    child: RecordButton(
                       onRecord: () {
                         if (!recording) {
                           context.read<RecordBloc>().add(StartRecordEvent());
@@ -128,94 +130,110 @@ class _RecordScreenState extends State<RecordScreen>
                         }
                       },
                       recordingStarted: recording,
-                    );
-                  }),
-                ),
-                Positioned(
-                    right: 20,
-                    bottom: 20,
-                    child: Row(
-                      children: [
-                        ValueListenableBuilder<bool>(
-                            valueListenable: ValueNotifier(alreadyRecorded),
-                            builder: (context, value, child) {
-                              if (value) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 15.0),
-                                  child: MultiBlocProvider(
-                                    providers: [
-                                      BlocProvider(
-                                        create: (context) => sl<PlaybackBloc>()
-                                          ..add(
-                                              InitializeThumbnailEvent(video)),
+                    ),
+                  ),
+                  Positioned(
+                      right: 20 + notchPadding.right,
+                      bottom: 20,
+                      child: Row(
+                        children: [
+                          ValueListenableBuilder<bool>(
+                              valueListenable: ValueNotifier(alreadyRecorded),
+                              builder: (context, value, child) {
+                                if (value) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 16.0),
+                                    child: MultiBlocProvider(
+                                      providers: [
+                                        BlocProvider(
+                                          create: (context) =>
+                                              sl<PlaybackBloc>()
+                                                ..add(InitializeThumbnailEvent(
+                                                    video)),
+                                        ),
+                                        BlocProvider(
+                                          create: (context) => sl<RecordBloc>(),
+                                        ),
+                                      ],
+                                      child: RecordedVideoThumbnail(
+                                        video: video,
+                                        homeTeam: homeTeam,
+                                        awayTeam: awayTeam,
+                                        onTap: () async {
+                                          final recordingStarted =
+                                              sl<RecordingRepository>()
+                                                  .recordingStarted;
+                                          if (recordingStarted) {
+                                            context
+                                                .read<RecordBloc>()
+                                                .add(StopRecordEvent());
+                                            UiUtils.vibrate();
+                                          }
+                                        },
                                       ),
-                                      BlocProvider(
-                                        create: (context) => sl<RecordBloc>(),
-                                      ),
-                                    ],
-                                    child: RecordedVideoThumbnail(
-                                      video: video,
+                                    ),
+                                  );
+                                }
+                                return SizedBox();
+                              }),
+                          BlocProvider(
+                            create: (context) => sl<MarkerCubit>(),
+                            child: VideoSelectorThumbnail(
+                              picker: _picker,
+                              awayTeam: awayTeam,
+                              homeTeam: homeTeam,
+                              onTap: () async {
+                                /// If recording started, stop recording and open video from gallery
+                                // if (controller.recordingStarted.value) {
+                                //   await controller.recordVideo();
+                                UiUtils.vibrate();
+
+                                // }
+                              },
+                            ),
+                          ),
+                        ],
+                      )),
+                  ValueListenableBuilder<bool>(
+                      valueListenable: ValueNotifier(recording),
+                      builder: (context, value, child) {
+                        if (value) {
+                          return child!;
+                        }
+                        return SizedBox();
+                      },
+                      child: Positioned(
+                        left: 20,
+                        bottom: 20,
+                        child: NewMarkerButton(
+                          onTap: () {
+                            showDialog(
+                                context: context,
+                                builder: (_) => MarkerDialog(
+                                      endPosition:
+                                          getCurrentTimerPosition(context),
                                       homeTeam: homeTeam,
                                       awayTeam: awayTeam,
-                                      onTap: () async {
-                                        final recordingStarted =
-                                            sl<RecordingRepository>()
-                                                .recordingStarted;
-                                        if (recordingStarted) {
-                                          context
-                                              .read<RecordBloc>()
-                                              .add(StopRecordEvent());
-                                          UiUtils.vibrate();
-                                        }
+                                      onMarkerConfigured: (marker) {
+                                        context
+                                            .read<MarkerCubit>()
+                                            .addMarker(marker);
+                                        UiUtils.showToast(
+                                            "Marker created successfully");
                                       },
-                                    ),
-                                  ),
-                                );
-                              }
-                              return SizedBox();
-                            }),
-                        VideoSelectorThumbnail(
-                          picker: _picker,
-                          awayTeam: awayTeam,
-                          homeTeam: homeTeam,
-                          onTap: () async {
-                            /// If recording started, stop recording and open video from gallery
-                            // if (controller.recordingStarted.value) {
-                            //   await controller.recordVideo();
-                            UiUtils.vibrate();
-
-                            // }
+                                      onCancel: () {},
+                                      onDelete: () {},
+                                    ));
                           },
+                          onCancel: () {},
+                          endPosition: getCurrentTimerPosition(context),
                         ),
-                      ],
-                    )),
-                ValueListenableBuilder<bool>(
-                    valueListenable: ValueNotifier(recording),
-                    builder: (context, value, child) {
-                      if (value) {
-                        return child!;
-                      }
-                      return SizedBox();
-                    },
-                    child: Positioned(
-                      left: 20,
-                      bottom: 20,
-                      child: NewMarkerButton(
-                        endPosition: getCurrentTimerPosition(context),
-                        homeTeam: homeTeam,
-                        awayTeam: awayTeam,
-                        onTap: () {},
-                        onCancel: () {},
-                        onMarkerConfigured: (marker) {
-                          context.read<MarkerCubit>().addMarker(marker);
-                          UiUtils.showToast("Marker created successfully");
-                        },
-                      ),
-                    )),
-              ],
-            );
-          }),
-        ));
+                      )),
+                ],
+              );
+            }),
+          )),
+    );
   }
 
   /// Display the preview from the camera (or a message if the preview is not available).

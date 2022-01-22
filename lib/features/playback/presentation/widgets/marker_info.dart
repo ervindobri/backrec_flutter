@@ -6,17 +6,23 @@ import 'package:backrec_flutter/features/record/data/models/team.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/dialogs/marker_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 
 class MarkerInfo extends StatelessWidget {
   final Marker? marker;
   final Team? homeTeam, awayTeam;
   final bool visible;
+  final MarkerCallback onMarkerConfigured;
+  final VoidCallback onDelete;
+
   const MarkerInfo(
       {Key? key,
       required this.marker,
       this.visible = true,
       this.homeTeam,
-      this.awayTeam})
+      this.awayTeam,
+      required this.onMarkerConfigured,
+      required this.onDelete})
       : super(key: key);
 
   @override
@@ -32,11 +38,10 @@ class MarkerInfo extends StatelessWidget {
                     endPosition: marker!.endPosition,
                     homeTeam: homeTeam,
                     awayTeam: awayTeam,
-                    filters: marker!.filters,
-                    onMarkerConfigured: (marker) {
-                      //TODO: update marker in cubit
-                    },
+                    marker: marker!,
+                    onMarkerConfigured: onMarkerConfigured,
                     onCancel: () {},
+                    onDelete: onDelete,
                   ));
         },
         child: SizedBox(
@@ -52,11 +57,13 @@ class MarkerInfo extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
                   child: Wrap(
-                      spacing: 12,
-                      alignment: WrapAlignment.center,
-                      runAlignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: marker!.filters.map((e) {
+                    spacing: 12,
+                    alignment: WrapAlignment.center,
+                    runAlignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Icon(FeatherIcons.info, color: Colors.white),
+                      ...marker!.filters.map((e) {
                         switch (e.runtimeType) {
                           case PlayerFilter:
                             final playerFilter = e as PlayerFilter;
@@ -100,7 +107,9 @@ class MarkerInfo extends StatelessWidget {
                           default:
                             return SizedBox();
                         }
-                      }).toList()),
+                      }).toList()
+                    ],
+                  ),
                 )),
           ),
         ),

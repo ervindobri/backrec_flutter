@@ -27,6 +27,8 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
       return Left(RedirectFailure(e.cause));
     } on RecordingException catch (e) {
       return Left(RecordingFailure(e.message));
+    } on PlaybackException catch (e) {
+      return Left(PlaybackFailure(e.message));
     }
   }
 
@@ -62,16 +64,16 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
 
   @override
   Future<Either<Failure, VideoPlayerController>> initializePlayback(
-      XFile video) async {
+      String video) async {
     return await _initialize(() {
-      this.video = video;
+      // this.video = video;
       return localDataSource.initializePlayback(video);
     });
   }
 
   @override
   Future<Either<Failure, VideoPlayerController>> initializeThumbnail(
-      XFile video) async {
+      String video) async {
     return await _initialize(() {
       return localDataSource.initializeThumbnail(video);
     });
@@ -86,4 +88,14 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
 
   @override
   late XFile video;
+
+  @override
+  Future<Either<Failure, String>> deletePlayback() async {
+    return await _action(() {
+      return localDataSource.deletePlayback();
+    });
+  }
+
+  @override
+  String get videoNameParsed => localDataSource.videoNameParsed;
 }

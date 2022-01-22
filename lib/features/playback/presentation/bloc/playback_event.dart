@@ -4,7 +4,7 @@ part of 'playback_bloc.dart';
 abstract class PlaybackEvent {}
 
 class InitializePlaybackEvent extends PlaybackEvent {
-  final XFile video;
+  final String video;
   final bool looping;
   final bool hasVolume;
   InitializePlaybackEvent(this.video, this.looping, this.hasVolume);
@@ -16,6 +16,12 @@ class InitializeThumbnailEvent extends PlaybackEvent {
 }
 
 class StartPlaybackEvent extends PlaybackEvent {}
+
+class MarkerPlaybackEvent extends PlaybackEvent {
+  final List<Marker> markers;
+
+  MarkerPlaybackEvent(this.markers);
+}
 
 class StopPlaybackEvent extends PlaybackEvent {}
 

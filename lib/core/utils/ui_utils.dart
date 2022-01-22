@@ -7,7 +7,7 @@ class UiUtils {
   static void showToast(String title) {
     Fluttertoast.showToast(
       backgroundColor: GlobalColors.primaryRed,
-      gravity: ToastGravity.BOTTOM,
+      gravity: ToastGravity.CENTER,
       msg: title,
       textColor: Colors.white,
     );

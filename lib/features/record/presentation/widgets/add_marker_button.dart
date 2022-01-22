@@ -10,63 +10,42 @@ import 'package:get/get.dart';
 class NewMarkerButton extends StatelessWidget {
   final Team? homeTeam, awayTeam;
   final Duration endPosition;
-  final MarkerCallback onMarkerConfigured;
+  final MarkerCallback? onMarkerConfigured;
   final VoidCallback onTap;
-  final VoidCallback onCancel;
+  final VoidCallback? onCancel;
 
   const NewMarkerButton({
     Key? key,
     // required this.controller,
-    required this.homeTeam,
-    required this.awayTeam,
+    this.homeTeam,
+    this.awayTeam,
     required this.endPosition,
-    required this.onMarkerConfigured,
+    this.onMarkerConfigured,
     required this.onTap,
-    required this.onCancel,
+    this.onCancel,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        onTap();
-        showDialog(
-            context: context,
-            builder: (_) => MarkerDialog(
-                  endPosition: endPosition,
-                  homeTeam: homeTeam,
-                  awayTeam: awayTeam,
-                  onMarkerConfigured: onMarkerConfigured,
-                  onCancel: onCancel,
-                ));
-      },
-      child: ClipRRect(
-        borderRadius: GlobalStyles.radiusAll12,
-        child: BackdropFilter(
-          filter: GlobalStyles.blur,
-          child: Container(
-            // width: 55,
-            height: 55,
-            decoration:
-                BoxDecoration(color: GlobalColors.primaryGrey.withOpacity(.4)),
-            child: Padding(
-              padding: const EdgeInsets.all(3.0),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Icon(FeatherIcons.plusCircle, color: Colors.white),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      GlobalStrings.marker,
-                      style: Get.textTheme.bodyText1!
-                          .copyWith(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
+    return ClipRRect(
+      borderRadius: GlobalStyles.radiusAll12,
+      child: BackdropFilter(
+        filter: GlobalStyles.blur,
+        child: Container(
+          height: 50,
+          child: TextButton.icon(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(
+                  GlobalColors.primaryGrey.withOpacity(.4)),
+            ),
+            onPressed: () {
+              print("new marker");
+              onTap();
+            },
+            icon: Icon(FeatherIcons.plusCircle, color: Colors.white),
+            label: Text(
+              GlobalStrings.marker,
+              style: Get.textTheme.bodyText1!.copyWith(color: Colors.white),
             ),
           ),
         ),

@@ -10,6 +10,7 @@ extension ParseToString on MarkerType {
     return this.toString().split('.').last.toLowerCase();
   }
 }
+
 abstract class Filter {}
 
 class PlayerFilter extends Filter {
@@ -33,20 +34,74 @@ class PlayerFilter extends Filter {
 
   String toJson() => json.encode(toMap());
 
-  factory PlayerFilter.fromJson(String source) => PlayerFilter.fromMap(json.decode(source));
+  factory PlayerFilter.fromJson(String source) =>
+      PlayerFilter.fromMap(json.decode(source));
 }
 
 class TeamFilter extends Filter {
   final Team team;
   TeamFilter(this.team);
+
+  Map<String, dynamic> toMap() {
+    return {
+      'team': team.toMap(),
+    };
+  }
+
+  factory TeamFilter.fromMap(Map<String, dynamic> map) {
+    return TeamFilter(
+      Team.fromMap(map['team']),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory TeamFilter.fromJson(String source) =>
+      TeamFilter.fromMap(json.decode(source));
 }
 
 class TypeFilter extends Filter {
   final List<MarkerType> types;
   TypeFilter(this.types);
+
+  Map<String, dynamic> toMap() {
+    return {
+      'types': types.map((x) => x.parse).toList(),
+    };
+  }
+
+  factory TypeFilter.fromMap(Map<String, dynamic> map) {
+    return TypeFilter(
+      List<MarkerType>.from(map['types']?.map((x) =>
+          MarkerType.values.firstWhere((element) => element.parse == x))),
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory TypeFilter.fromJson(String source) =>
+      TypeFilter.fromMap(json.decode(source));
 }
 
 class RatingFilter extends Filter {
   final double rating;
   RatingFilter(this.rating);
+
+  Map<String, dynamic> toMap() {
+    return {
+      'rating': rating,
+    };
+  }
+
+  factory RatingFilter.fromMap(Map<String, dynamic> map) {
+    return RatingFilter(
+      map['rating']?.toDouble() ?? 0.0,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory RatingFilter.fromJson(String source) => RatingFilter.fromMap(json.decode(source));
 }
+
+class NanFilter extends Filter {}

@@ -1,31 +1,31 @@
 import 'dart:io';
 
 import 'package:backrec_flutter/core/error/exceptions.dart';
-import 'package:backrec_flutter/features/record/data/models/marker.dart';
+import 'package:backrec_flutter/core/extensions/string_ext.dart';
 import 'package:camera/camera.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 
 abstract class PlaybackLocalDataSource {
-  List<Marker>? markers;
   VideoPlayerController? thumbnailController;
   VideoPlayerController? controller;
+  XFile? video;
+  String get videoNameParsed => videoPath?.parsed ?? "";
+  String? videoPath;
 
-  Future<String> setMarkers(List<Marker> markers);
   Future<String> startPlayback();
   Future<String> stopPlayback();
 
-  Future<VideoPlayerController> initializePlayback(XFile video);
-  Future<VideoPlayerController> initializeThumbnail(XFile video);
+  Future<VideoPlayerController> initializePlayback(String video);
+  Future<VideoPlayerController> initializeThumbnail(String video);
 
   Future<String> seekPlayback(Duration duration);
+  Future<String> deletePlayback();
 }
 
 class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
   @override
-  Future<String> setMarkers(List<Marker> markers) {
-    this.markers = markers;
-    return Future.value("Markers set successfully");
-  }
+  XFile? video;
 
   @override
   Future<String> startPlayback() async {
@@ -46,18 +46,19 @@ class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
   }
 
   @override
-  List<Marker>? markers;
-
-  @override
   VideoPlayerController? controller;
 
   @override
   VideoPlayerController? thumbnailController;
 
   @override
-  Future<VideoPlayerController> initializePlayback(XFile video) async {
+  Future<VideoPlayerController> initializePlayback(String video) async {
     try {
-      controller = VideoPlayerController.file(File(video.path));
+      controller = VideoPlayerController.file(File(video), videoPlayerOptions: VideoPlayerOptions(
+        
+      ));
+      // this.video = video;
+      this.videoPath = video;
       await controller?.initialize();
       await controller?.setVolume(1.0);
       await controller?.play();
@@ -68,10 +69,10 @@ class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
   }
 
   @override
-  Future<VideoPlayerController> initializeThumbnail(XFile video) async {
+  Future<VideoPlayerController> initializeThumbnail(String video) async {
     try {
-      print("Initializing thumbnail: ${video.path}");
-      thumbnailController = VideoPlayerController.file(File(video.path));
+      print("Initializing thumbnail: ${video}");
+      thumbnailController = VideoPlayerController.file(File(video));
       await thumbnailController?.initialize();
       await thumbnailController?.setLooping(true);
       await thumbnailController?.setVolume(0.0);
@@ -88,10 +89,31 @@ class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
       controller!.seekTo(duration);
       if (controller!.value.isPlaying) {
         // controller!.play();
-
       }
       return Future.value("");
     }
     throw PlaybackException("Controller is not initialized!");
   }
+
+  @override
+  Future<String> deletePlayback() async {
+    try {
+      if (video != null) {
+        final path = this.video!.path;
+        final galleryVideo = await File(path).delete();
+        print(galleryVideo);
+        return Future.value("Video deleted!");
+      }
+      throw PlaybackException("Video data was not loaded.");
+    } catch (e) {
+      print(e);
+      throw PlaybackException("Video couldn't be deleted: $e");
+    }
+  }
+
+  @override
+  String? videoPath;
+
+  @override
+  String get videoNameParsed => videoPath?.parsedPath ?? "";
 }

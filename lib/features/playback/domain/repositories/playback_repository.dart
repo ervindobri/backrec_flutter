@@ -5,12 +5,14 @@ import 'package:video_player/video_player.dart';
 
 abstract class PlaybackRepository {
   late XFile video;
+  String get videoNameParsed;
   Future<Either<Failure, String>> startPlayback();
   Future<Either<Failure, String>> stopPlayback();
   Future<Either<Failure, VideoPlayerController>> initializeThumbnail(
-      XFile video);
+      String video);
   Future<Either<Failure, VideoPlayerController>> initializePlayback(
-      XFile video);
+      String video);
 
   Future<Either<Failure, String>> seekPlayback(Duration params);
+  Future<Either<Failure, String>> deletePlayback();
 }

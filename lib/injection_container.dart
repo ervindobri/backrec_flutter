@@ -2,11 +2,7 @@ import 'package:backrec_flutter/features/playback/data/datasources/playback_loca
 import 'package:backrec_flutter/features/playback/data/repositories/playback_repository_impl.dart';
 import 'package:backrec_flutter/features/playback/domain/entities/ticker.dart';
 import 'package:backrec_flutter/features/playback/domain/repositories/playback_repository.dart';
-import 'package:backrec_flutter/features/playback/domain/usecases/init_playback.dart';
-import 'package:backrec_flutter/features/playback/domain/usecases/init_thumbnail.dart';
-import 'package:backrec_flutter/features/playback/domain/usecases/pause_playback.dart';
-import 'package:backrec_flutter/features/playback/domain/usecases/seek_playback.dart';
-import 'package:backrec_flutter/features/playback/domain/usecases/start_playback.dart';
+import 'package:backrec_flutter/features/playback/domain/usecases/usecases.dart';
 import 'package:backrec_flutter/features/playback/presentation/bloc/playback_bloc.dart';
 import 'package:backrec_flutter/features/record/data/datasources/markers_local_datasource.dart';
 import 'package:backrec_flutter/features/record/data/datasources/recording_local_datasource.dart';
@@ -70,13 +66,15 @@ void initPlaybackFeature() {
         initializePlayback: sl(),
         pausePlayback: sl(),
         seekPlayback: sl(),
-        startPlayback: sl()),
+        startPlayback: sl(),
+        deletePlayback: sl()),
   );
   sl.registerLazySingleton(() => InitializeThumbnail(sl()));
   sl.registerLazySingleton(() => InitializePlayback(sl()));
   sl.registerLazySingleton(() => PausePlayback(sl()));
   sl.registerLazySingleton(() => StartPlayback(sl()));
   sl.registerLazySingleton(() => SeekPlayback(sl()));
+  sl.registerLazySingleton(() => DeletePlayback(sl()));
   sl.registerLazySingleton<PlaybackRepository>(
     () => PlaybackRepositoryImpl(
       localDataSource: sl(),

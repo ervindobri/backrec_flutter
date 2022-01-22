@@ -14,11 +14,17 @@ class GlobalStyles {
     BoxShadow(color: GlobalColors.primaryRed.withOpacity(.15), blurRadius: 24)
   ];
 
-  static ButtonStyle buttonStyle({required Color color}) => ButtonStyle(
+  static ButtonStyle buttonStyle({Color color = GlobalColors.primaryRed}) =>
+      ButtonStyle(
         shape: MaterialStateProperty.all(
             RoundedRectangleBorder(borderRadius: radiusAll12)),
         backgroundColor: MaterialStateProperty.all(color),
       );
 
   static teamDecoration() {}
+
+  static whiteBorder() => Border.all(
+        color: Colors.white,
+        width: 3,
+      );
 }
