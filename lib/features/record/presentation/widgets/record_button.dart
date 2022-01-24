@@ -1,5 +1,4 @@
 import 'package:backrec_flutter/core/constants/constants.dart';
-import 'package:backrec_flutter/core/constants/global_colors.dart';
 import 'package:flutter/material.dart';
 
 class RecordButton extends StatelessWidget {

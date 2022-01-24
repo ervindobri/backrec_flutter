@@ -1,8 +1,8 @@
 extension VideoNameParser on String {
   String get galleryParsed {
-    final string = "trim.40B6B41B-D801-4212-AFDB-0886EDFED0A7.MOV";
+    // final string = "trim.40B6B41B-D801-4212-AFDB-0886EDFED0A7.MOV";
     const start = "trim.";
-    const end = ".MOV"; //TODO: multiple extensions
+    const end = ".MOV";
 
     final startIndex = this.indexOf('trim.');
     final endIndex = this.indexOf(end, startIndex + start.length);

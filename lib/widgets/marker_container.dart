@@ -12,7 +12,7 @@ class MarkerContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
+    // final height = MediaQuery.of(context).size.height;
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(

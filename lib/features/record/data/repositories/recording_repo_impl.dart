@@ -1,7 +1,6 @@
 import 'package:backrec_flutter/core/error/exceptions.dart';
 import 'package:backrec_flutter/core/error/failures.dart';
 import 'package:backrec_flutter/features/record/data/datasources/recording_local_datasource.dart';
-import 'package:backrec_flutter/features/record/data/models/marker.dart';
 import 'package:backrec_flutter/features/record/domain/repositories/recording_repository.dart';
 import 'package:camera/camera.dart';
 import 'package:dartz/dartz.dart';

@@ -32,7 +32,6 @@ class BlurryIconButton extends StatelessWidget {
                   color.withOpacity(.6)),
             ),
             onPressed: () {
-              print("new marker");
               onPressed();
             },
             icon: Icon(icon, color: Colors.white),

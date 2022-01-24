@@ -1,4 +1,4 @@
-package com.example.backrec_flutter
+package ro.appforte.backrec
 
 import io.flutter.embedding.android.FlutterActivity
 

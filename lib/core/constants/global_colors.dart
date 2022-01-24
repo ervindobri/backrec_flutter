@@ -8,8 +8,9 @@ class GlobalColors {
   static const Color secondaryRed = const Color(0xffE46564);
   static const Color secondaryGrey = const Color(0xff806E6E);
 
-  //llight colors:
+  /// 0xffC4C4C4
   static const Color lightGrey = const Color(0xffC4C4C4);
 
+  ///0xff494949
   static const Color textColor = const Color(0xff494949);
 }

@@ -45,7 +45,6 @@ class MarkerCubit extends Cubit<MarkerState> {
   }
 
   Future<void> loadMarkers(String name) async {
-    //TODO!: load back video markers
     print("Loading back video markers...");
     emit(MarkerLoading());
     await clearMarkers();

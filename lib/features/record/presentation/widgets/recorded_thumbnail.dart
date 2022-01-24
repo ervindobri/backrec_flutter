@@ -1,5 +1,4 @@
 import 'package:backrec_flutter/core/constants/global_colors.dart';
-import 'package:backrec_flutter/core/extensions/string_ext.dart';
 import 'package:backrec_flutter/core/utils/nav_utils.dart';
 import 'package:backrec_flutter/features/playback/presentation/bloc/playback_bloc.dart';
 import 'package:backrec_flutter/features/record/data/models/team.dart';
@@ -28,8 +27,8 @@ class RecordedVideoThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
+    // final width = MediaQuery.of(context).size.width;
+    // final height = MediaQuery.of(context).size.height;
     return InkWell(
       onTap: () {
         onTap();

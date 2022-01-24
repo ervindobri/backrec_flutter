@@ -18,7 +18,7 @@ class TeamSelector extends StatefulWidget {
 }
 
 class _TeamSelectorState extends State<TeamSelector> {
-  bool _teamSelected = false;
+  // bool _teamSelected = false;
   Team homeTeam = Team(name: '', founded: 0000),
       awayTeam = Team(name: '', founded: 0000);
 

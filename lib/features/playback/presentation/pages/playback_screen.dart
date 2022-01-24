@@ -141,24 +141,34 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                         //big play button
                         Padding(
                           padding: notchPadding,
-                          child: OverlayActions(
-                            finishedPlaying: finished,
-                            setFocus: () => setFocus(isPlaying),
-                            onPressed: () {
-                              if (isPlaying) {
-                                context
-                                    .read<PlaybackBloc>()
-                                    .add(StopPlaybackEvent());
-                                setFocus(isPlaying, instant: false);
-                              } else {
-                                context
-                                    .read<PlaybackBloc>()
-                                    .add(StartPlaybackEvent());
-                                setFocus(false, instant: false);
-                              }
-                            },
-                            inFocus: _inFocus,
-                            isPlaying: isPlaying,
+                          child: MultiBlocProvider(
+                            providers: [
+                              BlocProvider(
+                                create: (context) => sl<PlaybackBloc>(),
+                              ),
+                              BlocProvider(
+                                create: (context) => sl<MarkerCubit>(),
+                              ),
+                            ],
+                            child: OverlayActions(
+                              finishedPlaying: finished,
+                              setFocus: () => setFocus(isPlaying),
+                              onPressed: () {
+                                if (isPlaying) {
+                                  context
+                                      .read<PlaybackBloc>()
+                                      .add(StopPlaybackEvent());
+                                  setFocus(isPlaying, instant: false);
+                                } else {
+                                  context
+                                      .read<PlaybackBloc>()
+                                      .add(StartPlaybackEvent());
+                                  setFocus(false, instant: false);
+                                }
+                              },
+                              inFocus: _inFocus,
+                              isPlaying: isPlaying,
+                            ),
                           ),
                         ),
                         //back button
@@ -338,8 +348,13 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                           duration: kThemeAnimationDuration,
                           child: BlurryIconButton(
                             onPressed: () {
+                              final videoPath = sl<PlaybackRepository>().path;
+                              final markers = sl<MarkerCubit>().markers;
                               //open cut dialog
-                              openCutDialog(context);
+                              context
+                                  .read<PlaybackBloc>()
+                                  .add(StopPlaybackEvent());
+                              openCutDialog(context, videoPath, markers);
                             },
                             color: GlobalColors.primaryRed,
                             label: "Cut",

@@ -1,9 +1,14 @@
 import 'package:backrec_flutter/features/playback/data/datasources/playback_local_datasource.dart';
+import 'package:backrec_flutter/features/playback/data/datasources/trimmer_local_datasource.dart';
 import 'package:backrec_flutter/features/playback/data/repositories/playback_repository_impl.dart';
+import 'package:backrec_flutter/features/playback/data/repositories/trimmer_repository_impl.dart';
 import 'package:backrec_flutter/features/playback/domain/entities/ticker.dart';
 import 'package:backrec_flutter/features/playback/domain/repositories/playback_repository.dart';
+import 'package:backrec_flutter/features/playback/domain/repositories/trimmer_repository.dart';
+import 'package:backrec_flutter/features/playback/domain/usecases/trimmer/trimmer.dart';
 import 'package:backrec_flutter/features/playback/domain/usecases/usecases.dart';
 import 'package:backrec_flutter/features/playback/presentation/bloc/playback_bloc.dart';
+import 'package:backrec_flutter/features/playback/presentation/cubit/trimmer_cubit.dart';
 import 'package:backrec_flutter/features/record/data/datasources/markers_local_datasource.dart';
 import 'package:backrec_flutter/features/record/data/datasources/recording_local_datasource.dart';
 import 'package:backrec_flutter/features/record/data/repositories/marker_repo_impl.dart';
@@ -31,6 +36,7 @@ Future<void> init() async {
   initPlaybackFeature();
   initTimerFeature();
   initMarkerFeature();
+  initTrimmerFeature();
   final sharedPreferences = await SharedPreferences.getInstance();
   final storage = FlutterSecureStorage(
       aOptions: const AndroidOptions(
@@ -40,6 +46,20 @@ Future<void> init() async {
   sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton(() => storage);
   sl.registerLazySingleton(() => http.Client());
+}
+
+void initTrimmerFeature() {
+  sl.registerFactory(() => TrimmerCubit(repository: sl()));
+  sl.registerLazySingleton(() => TrimVideo(sl()));
+
+  sl.registerLazySingleton<TrimmerRepository>(
+    () => TrimmerRepositoryImpl(
+      localDataSource: sl(),
+    ),
+  );
+  sl.registerLazySingleton<TrimmerLocalDataSource>(
+    () => TrimmerLocalDataSourceImpl(),
+  );
 }
 
 void initMarkerFeature() {

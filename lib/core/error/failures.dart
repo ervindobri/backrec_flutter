@@ -34,3 +34,8 @@ class PlaybackFailure extends Failure {
   final String message;
   PlaybackFailure(this.message);
 }
+
+class TrimmerFailure extends Failure {
+  final String message;
+  TrimmerFailure(this.message);
+}

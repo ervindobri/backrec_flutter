@@ -25,3 +25,8 @@ class PlaybackException implements Exception {
 
   PlaybackException(this.message);
 }
+
+class TrimmerException implements Exception {
+  final String message;
+  TrimmerException(this.message);
+}

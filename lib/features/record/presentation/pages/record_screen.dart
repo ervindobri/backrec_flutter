@@ -18,7 +18,6 @@ import 'package:backrec_flutter/features/record/presentation/widgets/record_time
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
 
 class RecordScreen extends StatefulWidget {
@@ -31,7 +30,6 @@ class RecordScreen extends StatefulWidget {
 class _RecordScreenState extends State<RecordScreen>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   Team? homeTeam, awayTeam;
-  final ImagePicker _picker = ImagePicker();
   bool alreadyRecorded = false;
   // Counting pointers (number of user fingers on screen)
   int _pointers = 0;
@@ -48,7 +46,7 @@ class _RecordScreenState extends State<RecordScreen>
 
   @override
   Widget build(BuildContext context) {
-    final notchPadding = MediaQuery.of(context).viewPadding;
+    // final notchPadding = MediaQuery.of(context).viewPadding;
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     return WillPopScope(
@@ -210,7 +208,6 @@ class _RecordScreenState extends State<RecordScreen>
                               BlocProvider(
                                 create: (context) => sl<MarkerCubit>(),
                                 child: VideoSelectorThumbnail(
-                                  picker: _picker,
                                   awayTeam: awayTeam,
                                   homeTeam: homeTeam,
                                   onTap: () async {

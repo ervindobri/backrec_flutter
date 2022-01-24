@@ -1,11 +1,12 @@
 import 'package:backrec_flutter/core/constants/constants.dart';
 import 'package:backrec_flutter/core/extensions/text_theme_ext.dart';
+import 'package:backrec_flutter/features/playback/domain/repositories/playback_repository.dart';
 import 'package:backrec_flutter/features/playback/presentation/widgets/cut_dialog.dart';
 import 'package:backrec_flutter/features/record/data/models/marker.dart';
 import 'package:backrec_flutter/features/record/presentation/cubit/marker_cubit.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/src/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class OverlayActions extends StatelessWidget {
   final VoidCallback onPressed;
@@ -107,7 +108,11 @@ class OverlayActions extends StatelessWidget {
                                 onPressed: () {
                                   if (!inFocus && finishedPlaying) {
                                     //open cut dialog
-                                    openCutDialog(context);
+                                    final videoPath =
+                                        context.read<PlaybackRepository>().path;
+                                    final markers =
+                                        context.read<MarkerCubit>().markers;
+                                    openCutDialog(context, videoPath, markers);
                                   }
                                 },
                               );

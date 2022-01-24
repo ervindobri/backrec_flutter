@@ -39,7 +39,6 @@ class NewMarkerButton extends StatelessWidget {
                   GlobalColors.primaryGrey.withOpacity(.6)),
             ),
             onPressed: () {
-              print("new marker");
               onTap();
             },
             icon: Icon(FeatherIcons.plusCircle, color: Colors.white),

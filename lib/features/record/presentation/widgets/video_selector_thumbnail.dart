@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:backrec_flutter/core/constants/global_colors.dart';
 import 'package:backrec_flutter/core/constants/global_styles.dart';
 import 'package:backrec_flutter/core/extensions/string_ext.dart';
@@ -14,20 +12,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart' as bloc;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
-import 'package:image_picker/image_picker.dart';
 // import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 
 class VideoSelectorThumbnail extends StatelessWidget {
   const VideoSelectorThumbnail({
     Key? key,
-    required ImagePicker picker,
     this.homeTeam,
     this.awayTeam,
     required this.onTap,
-  })  : _picker = picker,
-        super(key: key);
+  }) : super(key: key);
 
-  final ImagePicker _picker;
   final Team? homeTeam, awayTeam;
   final VoidCallback onTap;
 

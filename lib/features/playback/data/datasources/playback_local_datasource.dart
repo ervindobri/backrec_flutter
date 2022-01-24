@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:backrec_flutter/core/error/exceptions.dart';
 import 'package:backrec_flutter/core/extensions/string_ext.dart';
 import 'package:camera/camera.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 
 abstract class PlaybackLocalDataSource {
@@ -71,7 +70,7 @@ class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
   @override
   Future<VideoPlayerController> initializeThumbnail(String video) async {
     try {
-      print("Initializing thumbnail: ${video}");
+      print("Initializing thumbnail: $video");
       thumbnailController = VideoPlayerController.file(File(video));
       await thumbnailController?.initialize();
       await thumbnailController?.setLooping(true);

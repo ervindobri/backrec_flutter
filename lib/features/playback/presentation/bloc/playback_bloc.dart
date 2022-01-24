@@ -85,7 +85,6 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackState> {
       } else if (event is MarkerPlaybackEvent) {
         print("MarkerPlaybackEvent");
         add(StartPlaybackEvent());
-        //TODO: sort markers by time
         event.markers
             .sort((a, b) => a.startPosition.compareTo(b.startPosition));
         final sortedMarkers = event.markers;

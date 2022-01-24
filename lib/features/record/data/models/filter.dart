@@ -1,6 +1,4 @@
 import 'dart:convert';
-
-import 'package:backrec_flutter/features/record/data/models/marker.dart';
 import 'package:backrec_flutter/features/record/data/models/player.dart';
 import 'package:backrec_flutter/features/record/data/models/team.dart';
 
