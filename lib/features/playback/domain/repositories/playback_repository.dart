@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:backrec_flutter/core/error/failures.dart';
 import 'package:camera/camera.dart';
 import 'package:dartz/dartz.dart';
@@ -9,7 +11,7 @@ abstract class PlaybackRepository {
   late String path;
   Future<Either<Failure, String>> startPlayback();
   Future<Either<Failure, String>> stopPlayback();
-  Future<Either<Failure, VideoPlayerController>> initializeThumbnail(
+  Future<Either<Failure, Uint8List>> initializeThumbnail(
       String video);
   Future<Either<Failure, VideoPlayerController>> initializePlayback(
       String video);

@@ -45,74 +45,71 @@ class MarkerInfo extends StatelessWidget {
                     onDelete: onDelete,
                   ));
         },
-        child: SizedBox(
-          // height: 50,
-          child: ClipRRect(
-            child: BackdropFilter(
-                filter: GlobalStyles.blur,
-                child: Container(
-                  // height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: GlobalStyles.radiusAll12,
-                    color: GlobalColors.primaryGrey.withOpacity(.6),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
-                  child: Wrap(
-                    spacing: 12,
-                    alignment: WrapAlignment.center,
-                    runAlignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Icon(FeatherIcons.info, color: Colors.white),
-                      ...marker!.filters.map((e) {
-                        switch (e.runtimeType) {
-                          case PlayerFilter:
-                            final playerFilter = e as PlayerFilter;
-                            return Column(
+        child: ClipRRect(
+          borderRadius: GlobalStyles.radiusAll12,
+          child: BackdropFilter(
+              filter: GlobalStyles.blur,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: GlobalStyles.radiusAll12,
+                  color: GlobalColors.primaryGrey.withOpacity(.6),
+                ),
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+                child: Wrap(
+                  spacing: 12,
+                  alignment: WrapAlignment.center,
+                  runAlignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Icon(FeatherIcons.info, color: Colors.white),
+                    ...marker!.filters.map((e) {
+                      switch (e.runtimeType) {
+                        case PlayerFilter:
+                          final playerFilter = e as PlayerFilter;
+                          return Column(
+                            children: [
+                              Text(playerFilter.player1!.name,
+                                  style: context.bodyText1),
+                              Text(playerFilter.player2!.name,
+                                  style: context.bodyText1),
+                            ],
+                          );
+                        case TeamFilter:
+                          final teamFilter = e as TeamFilter;
+                          return Text(teamFilter.team.name,
+                              style: context.bodyText1);
+                        case TypeFilter:
+                          final typeFilter = e as TypeFilter;
+                          return Wrap(
+                            spacing: 4,
+                            direction: Axis.vertical,
+                            children: typeFilter.types
+                                .map((e) => Text("#${e.parse}",
+                                    style: context.bodyText1
+                                        .copyWith(color: Colors.white)))
+                                .toList(),
+                          );
+                        case RatingFilter:
+                          final ratingFilter = e as RatingFilter;
+                          return SizedBox(
+                            width: 60,
+                            height: 60,
+                            child: Stack(
+                              alignment: Alignment.center,
                               children: [
-                                Text(playerFilter.player1!.name,
-                                    style: context.bodyText1),
-                                Text(playerFilter.player2!.name,
-                                    style: context.bodyText1),
+                                Icon(CupertinoIcons.star_fill,
+                                    size: 36, color: Colors.white),
+                                Text(ratingFilter.rating.floor().toString()),
                               ],
-                            );
-                          case TeamFilter:
-                            final teamFilter = e as TeamFilter;
-                            return Text(teamFilter.team.name,
-                                style: context.bodyText1);
-                          case TypeFilter:
-                            final typeFilter = e as TypeFilter;
-                            return Wrap(
-                              spacing: 4,
-                              direction: Axis.vertical,
-                              children: typeFilter.types
-                                  .map((e) => Text("#${e.parse}",
-                                      style: context.bodyText1
-                                          .copyWith(color: Colors.white)))
-                                  .toList(),
-                            );
-                          case RatingFilter:
-                            final ratingFilter = e as RatingFilter;
-                            return SizedBox(
-                              width: 60,
-                              height: 60,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Icon(CupertinoIcons.star_fill,
-                                      size: 36, color: Colors.white),
-                                  Text(ratingFilter.rating.floor().toString()),
-                                ],
-                              ),
-                            );
-                          default:
-                            return SizedBox();
-                        }
-                      }).toList()
-                    ],
-                  ),
-                )),
-          ),
+                            ),
+                          );
+                        default:
+                          return SizedBox();
+                      }
+                    }).toList()
+                  ],
+                ),
+              )),
         ),
       ),
     );

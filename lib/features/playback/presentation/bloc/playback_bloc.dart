@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:backrec_flutter/core/error/failures.dart';
 import 'package:backrec_flutter/features/playback/domain/usecases/delete_playback.dart';
 import 'package:backrec_flutter/features/playback/domain/usecases/init_playback.dart';
@@ -33,12 +35,12 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackState> {
     on<PlaybackEvent>((event, emit) async {
       if (event is InitializeThumbnailEvent) {
         print("InitializeThumbnailEvent - ${event.video.name}");
-        emit(PlaybackInitializing());
-        final result = await initThumbnail(InitParams(event.video.name));
+        // emit(PlaybackInitializing());
+        final result = await initThumbnail(InitParams(event.video.path));
         emit(result.fold(
           (failure) =>
               PlaybackError(_mapFailureToMessage(failure)), //todo: map errors
-          (controller) => ThumbnailInitialized(controller),
+          (thumbnail) => ThumbnailInitialized(thumbnail),
         ));
       } else if (event is InitializePlaybackEvent) {
         print("InitializePlaybackEvent - ${event.video}");

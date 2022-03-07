@@ -63,21 +63,29 @@ class RecordedVideoThumbnail extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.all(3.0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: BlocBuilder<PlaybackBloc, PlaybackState>(
-              builder: (context, state) {
-                if (state is ThumbnailInitialized) {
-                  return VideoPlayer(state.controller);
-                } else {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: GlobalColors.primaryRed,
-                    ),
-                  );
-                }
-              },
-            ),
+          child: BlocConsumer<PlaybackBloc, PlaybackState>(
+            listener: (context, state) {
+              if (state is PlaybackError) {
+                print(state.message);
+              }
+            },
+            builder: (context, state) {
+              if (state is ThumbnailInitialized) {
+                return Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      image: DecorationImage(
+                          fit: BoxFit.cover,
+                          image: MemoryImage(state.thumbnail))),
+                );
+              } else {
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: GlobalColors.primaryRed,
+                  ),
+                );
+              }
+            },
           ),
         ),
       ),

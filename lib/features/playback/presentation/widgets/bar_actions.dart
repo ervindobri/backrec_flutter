@@ -64,12 +64,12 @@ class VideoPlayerActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    final double progressBarPos = 50.0;
+    final double progressBarPos = 32.0;
     final markers = context.select((MarkerCubit cubit) => cubit.markers);
     final notchPadding = MediaQuery.of(context).viewPadding;
-    final double leftPadding = notchPadding.left > 0 ? notchPadding.left : 20.0;
+    final double leftPadding = notchPadding.left > 0 ? notchPadding.left : 10.0;
     final double rightPadding =
-        notchPadding.right > 0 ? notchPadding.right : 20.0;
+        notchPadding.right > 0 ? notchPadding.right : 10.0;
     final barWidth = width - rightPadding - leftPadding - 16;
     return GestureDetector(
       onTap: () {
@@ -77,20 +77,19 @@ class VideoPlayerActions extends StatelessWidget {
       },
       child: Container(
         width: width - rightPadding - leftPadding,
-        height: 130,
+        height: 94,
         margin: EdgeInsets.fromLTRB(leftPadding, 0, rightPadding, 0),
         child: ClipRRect(
           borderRadius: GlobalStyles.topRadius24,
           child: BackdropFilter(
             filter: GlobalStyles.highBlur,
             child: Container(
-              width: width * .9,
-              height: 130,
+              // color: Colors.black,
               decoration: BoxDecoration(
                   color: GlobalColors.primaryGrey.withOpacity(.6),
                   borderRadius: GlobalStyles.topRadius24),
-              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8),
               child: Stack(
+                alignment: Alignment.bottomCenter,
                 // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   //actions - prev, next marker
@@ -99,7 +98,7 @@ class VideoPlayerActions extends StatelessWidget {
                     // left: leftPadding,
                     // right: rightPadding,
                     child: Container(
-                      height: height * .15,
+                      height: 48,
                       width: barWidth,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -135,29 +134,28 @@ class VideoPlayerActions extends StatelessWidget {
                               ),
                             ),
                           ),
-                          Expanded(
-                            child: Container(
-                              width: width,
-                              height: 50,
-                              // color: Colors.black,
-                              child: Stack(
-                                  children: markers
-                                      .map(
-                                        (e) => MarkerPin(
-                                          marker: e,
-                                          current: e == currentMarker,
-                                          totalWidth: barWidth - 130,
-                                          onMarkerTap: () {
-                                            e.id = markers.indexOf(
-                                                e); //set index if non existent
-                                            onMarkerTap(e);
-                                          },
-                                          totalDuration: totalDuration,
-                                        ),
-                                      )
-                                      .toList()),
-                            ),
+                          Container(
+                            width: width * .74,
+                            height: 50,
+                            // color: Colors.black,
+                            child: Stack(
+                                children: markers
+                                    .map(
+                                      (e) => MarkerPin(
+                                        marker: e,
+                                        current: e == currentMarker,
+                                        totalWidth: barWidth - 130,
+                                        onMarkerTap: () {
+                                          e.id = markers.indexOf(
+                                              e); //set index if non existent
+                                          onMarkerTap(e);
+                                        },
+                                        totalDuration: totalDuration,
+                                      ),
+                                    )
+                                    .toList()),
                           ),
+                          SizedBox(width: 12),
                           Tooltip(
                             message: GlobalStrings.jumpToNextMarkerTooltip,
                             textStyle: context.bodyText1.copyWith(
@@ -200,175 +198,178 @@ class VideoPlayerActions extends StatelessWidget {
                     // right: rightPadding,
                     child: Container(
                       width: barWidth,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: ValueListenableBuilder(
-                            valueListenable: controller,
-                            builder: (context, VideoPlayerValue value, child) {
-                              return ProgressBar(
-                                progress: value.position,
-                                total: value.duration,
-                                timeLabelLocation: TimeLabelLocation.sides,
-                                timeLabelTextStyle: context.bodyText1
-                                    .copyWith(color: Colors.white),
-                                thumbColor: Colors.white,
-                                timeLabelType: TimeLabelType.remainingTime,
-                                baseBarColor:
-                                    GlobalColors.primaryRed.withOpacity(.2),
-                                barHeight: 10,
-                                progressBarColor: GlobalColors.primaryRed,
-                                onSeek: (duration) {
-                                  onSeek(duration);
-                                },
-                              );
-                            }),
-                      ),
+                      child: ValueListenableBuilder(
+                          valueListenable: controller,
+                          builder: (context, VideoPlayerValue value, child) {
+                            final elapsed =
+                                getDisplayTime(value.position.inMilliseconds);
+
+                            final remaining = getDisplayTime(
+                                value.duration.inMilliseconds -
+                                    value.position.inMilliseconds);
+
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                //elapsed
+                                SizedBox(
+                                  width: 32,
+                                  child: Text(elapsed,
+                                      style: context.bodyText1.copyWith(
+                                          color: Colors.white, fontSize: 12)),
+                                ),
+
+                                //bar
+                                SizedBox(
+                                  width: barWidth - 64 - 32,
+                                  child: ProgressBar(
+                                    progress: value.position,
+                                    total: value.duration,
+                                    timeLabelLocation: TimeLabelLocation.none,
+                                    thumbColor: Colors.white,
+                                    timeLabelType: TimeLabelType.remainingTime,
+                                    baseBarColor:
+                                        GlobalColors.primaryRed.withOpacity(.2),
+                                    barHeight: 8,
+                                    progressBarColor: GlobalColors.primaryRed,
+                                    onSeek: (duration) {
+                                      onSeek(duration);
+                                    },
+                                  ),
+                                ),
+
+                                SizedBox(
+                                  width: 32,
+                                  child: Text(remaining,
+                                      style: context.bodyText1.copyWith(
+                                          color: Colors.white, fontSize: 12)),
+                                ),
+                              ],
+                            );
+                          }),
                     ),
                   ),
                   // bottom action and infos
-                  Positioned(
-                    bottom: 0,
+                  Align(
+                    alignment: Alignment.bottomCenter,
                     child: AnimatedOpacity(
-                      duration: Duration(milliseconds: 300),
+                      duration: kThemeAnimationDuration,
                       opacity: inFocus ? 0.0 : 1.0,
                       child: Container(
                         width: barWidth,
-                        // margin: EdgeInsets.fromLTRB(leftPadding, 0, rightPadding, 0),
-                        child: Stack(
+                        height: 36,
+                        child: Row(
                           children: [
-                            //play/pause and info row
-                            Row(
-                              children: [
-                                AnimatedSwitcher(
-                                  duration: Duration(milliseconds: 500),
-                                  child: !isPlaying
-                                      ? IconButton(
-                                          iconSize: 20,
-                                          icon: Icon(FontAwesomeIcons.play,
-                                              color: Colors.white),
-                                          onPressed: () {
-                                            onPlay();
-                                          })
-                                      : IconButton(
-                                          iconSize: 20,
-                                          icon: Icon(FontAwesomeIcons.pause,
-                                              color: Colors.white),
-                                          onPressed: () {
-                                            onPause();
-                                          }),
-                                ),
-                                TextButton.icon(
-                                  icon: Icon(FeatherIcons.playCircle,
-                                      color: GlobalColors.primaryRed),
-                                  label: Text(GlobalStrings.playback,
-                                      style: context.bodyText1.copyWith(
-                                          decoration: TextDecoration.underline,
-                                          color: GlobalColors.primaryRed)),
-                                  onPressed: onMarkerPlayback,
-                                ),
-                                ValueListenableBuilder<bool>(
-                                  valueListenable: ValueNotifier(
-                                      homeTeam != null && awayTeam != null),
-                                  builder: (context, value, child) {
-                                    if (value) {
-                                      return Padding(
-                                        padding:
-                                            const EdgeInsets.only(left: 30.0),
-                                        child: Container(
-                                          width: 130,
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(homeTeam!.name,
-                                                  style: context.bodyText1
-                                                      .copyWith(
-                                                          color: Colors.white)),
-                                              Text("VS",
-                                                  style: context.bodyText1
-                                                      .copyWith(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w600)),
-                                              Text(awayTeam!.name,
-                                                  style: context.bodyText1
-                                                      .copyWith(
-                                                          color: Colors.white)),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                    return SizedBox();
-                                  },
-                                )
-                              ],
-                            ),
-                            //trash - to delete video
-                            Positioned(
-                              right: 0,
-                              child: Wrap(
-                                spacing: 16,
-                                children: [
-                                  ValueListenableBuilder<List<Marker>>(
-                                      valueListenable: ValueNotifier(
-                                          context.select((MarkerCubit value) =>
-                                              value.markers)),
-                                      builder: (context, value, child) {
-                                        if (value.isNotEmpty) {
-                                          return BlocListener<MarkerCubit,
-                                              MarkerState>(
-                                            listener: (context, state) {
-                                              print(state);
-                                              if (state is MarkerSaved) {
-                                                UiUtils.showToast(GlobalStrings
-                                                    .markersSavedToast);
-                                              }
-                                            },
-                                            child: TextButton.icon(
-                                              label: Text(
-                                                  GlobalStrings.saveMarkers,
-                                                  style: context.bodyText1
-                                                      .copyWith(
-                                                          color: Colors.white)),
-                                              icon: FaIcon(
-                                                  FontAwesomeIcons.save,
-                                                  size: 20,
-                                                  color: Colors.white),
-                                              onPressed: () {
-                                                final videoName = context
-                                                    .read<PlaybackRepository>()
-                                                    .videoNameParsed;
-                                                context
-                                                    .read<MarkerCubit>()
-                                                    .saveData(videoName.parsed);
-                                              },
-                                            ),
-                                          );
-                                        } else {
-                                          return SizedBox();
-                                        }
+                            AnimatedSwitcher(
+                              duration: Duration(milliseconds: 500),
+                              child: !isPlaying
+                                  ? IconButton(
+                                      iconSize: 20,
+                                      icon: Icon(FontAwesomeIcons.play,
+                                          color: Colors.white),
+                                      onPressed: () {
+                                        onPlay();
+                                      })
+                                  : IconButton(
+                                      iconSize: 20,
+                                      icon: Icon(FontAwesomeIcons.pause,
+                                          color: Colors.white),
+                                      onPressed: () {
+                                        onPause();
                                       }),
-                                  IconButton(
-                                    icon: FaIcon(FeatherIcons.trash,
-                                        size: 20, color: Colors.white),
-                                    onPressed: () {
-                                      final playbackBloc =
-                                          context.read<PlaybackBloc>();
-                                      showDialog(
-                                          context: context,
-                                          useSafeArea: false,
-                                          builder: (context) =>
-                                              ConfirmationDialog(onConfirm: () {
-                                                playbackBloc
-                                                    .add(DeletePlaybackEvent());
-                                                NavUtils.back(context);
-                                                NavUtils.toRecording(context);
-                                              }));
-                                    },
-                                  ),
-                                ],
-                              ),
+                            ),
+                            TextButton.icon(
+                              icon: Icon(FeatherIcons.playCircle,
+                                  size: 20, color: GlobalColors.primaryRed),
+                              label: Text(GlobalStrings.playback,
+                                  style: context.bodyText1.copyWith(
+                                      decoration: TextDecoration.underline,
+                                      color: GlobalColors.primaryRed)),
+                              onPressed: onMarkerPlayback,
+                            ),
+                            ValueListenableBuilder<bool>(
+                              valueListenable: ValueNotifier(
+                                  homeTeam != null && awayTeam != null),
+                              builder: (context, value, child) {
+                                if (value) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(left: 30.0),
+                                    child: Container(
+                                      width: 130,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(homeTeam!.name,
+                                              style: context.bodyText1.copyWith(
+                                                  color: Colors.white)),
+                                          Text("VS",
+                                              style: context.bodyText1.copyWith(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600)),
+                                          Text(awayTeam!.name,
+                                              style: context.bodyText1.copyWith(
+                                                  color: Colors.white)),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return SizedBox();
+                              },
+                            ),
+                            const Spacer(),
+                            ValueListenableBuilder<List<Marker>>(
+                                valueListenable: ValueNotifier(context.select(
+                                    (MarkerCubit value) => value.markers)),
+                                builder: (context, value, child) {
+                                  if (value.isNotEmpty) {
+                                    return BlocListener<MarkerCubit,
+                                        MarkerState>(
+                                      listener: (context, state) {
+                                        print(state);
+                                        if (state is MarkerSaved) {
+                                          UiUtils.showToast(
+                                              GlobalStrings.markersSavedToast);
+                                        }
+                                      },
+                                      child: TextButton.icon(
+                                        label: Text(GlobalStrings.saveMarkers,
+                                            style: context.bodyText1
+                                                .copyWith(color: Colors.white)),
+                                        icon: FaIcon(FontAwesomeIcons.save,
+                                            size: 20, color: Colors.white),
+                                        onPressed: () {
+                                          final videoName = context
+                                              .read<PlaybackRepository>()
+                                              .videoNameParsed;
+                                          context
+                                              .read<MarkerCubit>()
+                                              .saveData(videoName.parsed);
+                                        },
+                                      ),
+                                    );
+                                  } else {
+                                    return SizedBox();
+                                  }
+                                }),
+                            TextButton(
+                              child: FaIcon(FeatherIcons.trash2,
+                                  size: 20, color: Colors.white),
+                              onPressed: () {
+                                final playbackBloc =
+                                    context.read<PlaybackBloc>();
+                                showDialog(
+                                    context: context,
+                                    useSafeArea: false,
+                                    builder: (context) =>
+                                        ConfirmationDialog(onConfirm: () {
+                                          playbackBloc
+                                              .add(DeletePlaybackEvent());
+                                          NavUtils.back(context);
+                                          NavUtils.toRecording(context);
+                                        }));
+                              },
                             )
                           ],
                         ),
@@ -382,5 +383,14 @@ class VideoPlayerActions extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  getDisplayTime(int milliseconds) {
+    final minutesStr =
+        ((milliseconds / 1000) / 60).floor().toString().padLeft(2, '0');
+    final secondsStr =
+        ((milliseconds / 10) % 60).floor().toString().padLeft(2, '0');
+
+    return "$minutesStr:$secondsStr";
   }
 }

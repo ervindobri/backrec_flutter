@@ -14,9 +14,9 @@ class PlaybackInitialized extends PlaybackState {
 }
 
 class ThumbnailInitialized extends PlaybackState {
-  final VideoPlayerController controller;
+  final Uint8List thumbnail;
 
-  ThumbnailInitialized(this.controller);
+  ThumbnailInitialized(this.thumbnail);
 }
 
 class PlaybackPlaying extends PlaybackState {}

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:backrec_flutter/core/error/exceptions.dart';
 import 'package:backrec_flutter/core/error/failures.dart';
 import 'package:backrec_flutter/features/playback/data/datasources/playback_local_datasource.dart';
@@ -7,6 +9,7 @@ import 'package:dartz/dartz.dart';
 import 'package:video_player/video_player.dart';
 
 typedef Future<String> _UsecaseChooser();
+typedef Future<Uint8List> _ThumbnailUsecaseChooser();
 // typedef Future<void> _VoidUsecaseChooser();
 typedef Future<VideoPlayerController> _InitUsecaseChooser();
 
@@ -50,6 +53,24 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
     }
   }
 
+  Future<Either<Failure, Uint8List>> _initializeThumbnail(
+    _ThumbnailUsecaseChooser getUsecase,
+  ) async {
+    try {
+      final thumbnail = await getUsecase();
+      // controller = localController;
+      return Right(thumbnail);
+    } on CustomServerException catch (e) {
+      return Left(CustomServerFailure(e.message));
+    } on RedirectException catch (e) {
+      return Left(RedirectFailure(e.cause));
+    } on RecordingException catch (e) {
+      return Left(RecordingFailure(e.message));
+    } on PlaybackException catch (e) {
+      return Left(PlaybackFailure(e.message));
+    }
+  }
+
   @override
   Future<Either<Failure, String>> startPlayback() async {
     return await _action(() {
@@ -75,9 +96,9 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
   }
 
   @override
-  Future<Either<Failure, VideoPlayerController>> initializeThumbnail(
+  Future<Either<Failure, Uint8List>> initializeThumbnail(
       String video) async {
-    return await _initialize(() {
+    return await _initializeThumbnail(() {
       return localDataSource.initializeThumbnail(video);
     });
   }

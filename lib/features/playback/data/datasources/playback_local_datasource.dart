@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:backrec_flutter/core/error/exceptions.dart';
 import 'package:backrec_flutter/core/extensions/string_ext.dart';
 import 'package:camera/camera.dart';
 import 'package:video_player/video_player.dart';
+import 'package:video_thumbnail/video_thumbnail.dart' as thumbnail;
 
 abstract class PlaybackLocalDataSource {
   VideoPlayerController? thumbnailController;
@@ -16,7 +18,7 @@ abstract class PlaybackLocalDataSource {
   Future<String> stopPlayback();
 
   Future<VideoPlayerController> initializePlayback(String video);
-  Future<VideoPlayerController> initializeThumbnail(String video);
+  Future<Uint8List> initializeThumbnail(String video);
 
   Future<String> seekPlayback(Duration duration);
   Future<String> deletePlayback();
@@ -53,9 +55,8 @@ class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
   @override
   Future<VideoPlayerController> initializePlayback(String video) async {
     try {
-      controller = VideoPlayerController.file(File(video), videoPlayerOptions: VideoPlayerOptions(
-        
-      ));
+      controller = VideoPlayerController.file(File(video),
+          videoPlayerOptions: VideoPlayerOptions());
       // this.video = video;
       this.videoPath = video;
       await controller?.initialize();
@@ -68,15 +69,22 @@ class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
   }
 
   @override
-  Future<VideoPlayerController> initializeThumbnail(String video) async {
+  Future<Uint8List> initializeThumbnail(String video) async {
     try {
       print("Initializing thumbnail: $video");
-      thumbnailController = VideoPlayerController.file(File(video));
-      await thumbnailController?.initialize();
-      await thumbnailController?.setLooping(true);
-      await thumbnailController?.setVolume(0.0);
-      await thumbnailController?.play();
-      return Future.value(thumbnailController!);
+      // thumbnailController = VideoPlayerController.file(File(video));
+      // await thumbnailController?.initialize();
+      // await thumbnailController?.setLooping(true);
+      // await thumbnailController?.setVolume(0.0);
+      // await thumbnailController?.play();
+      final uint8list = await thumbnail.VideoThumbnail.thumbnailData(
+        video: video,
+        imageFormat: thumbnail.ImageFormat.PNG,
+        maxWidth:
+            128, // specify the width of the thumbnail, let the height auto-scaled to keep the source aspect ratio
+        quality: 25,
+      );
+      return Future.value(uint8list);
     } catch (e) {
       throw PlaybackException(e.toString());
     }

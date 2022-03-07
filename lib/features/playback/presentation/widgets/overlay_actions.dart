@@ -41,42 +41,30 @@ class OverlayActions extends StatelessWidget {
           child: Container(
             width: width,
             height: height,
-            color: Colors.transparent,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                if (!finishedPlaying)
-                  AnimatedSwitcher(
-                    duration: Duration(milliseconds: 500),
-                    child: IconButton(
-                      iconSize: 100,
-                      icon: Icon(
-                        !isPlaying
-                            ? CupertinoIcons.play_arrow_solid
-                            : CupertinoIcons.pause_fill,
-                        color: Colors.white.withOpacity(.3),
-                      ),
-                      onPressed: () {
-                        if (!inFocus) {
-                          onPressed();
-                        }
-                      },
-                    ),
-                  ),
-                AnimatedOpacity(
-                  opacity: finishedPlaying ? 1.0 : 0.0,
-                  duration: kThemeAnimationDuration,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextButton.icon(
-                        label: Text(""),
-                        style: GlobalStyles.buttonStyle(
-                            color: GlobalColors.primaryGrey.withOpacity(.6)),
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                  Colors.black.withOpacity(.1),
+                  Colors.black.withOpacity(.5)
+                ])),
+            // color: Colors.transparent,
+            child: Visibility(
+              visible: !inFocus,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (!finishedPlaying)
+                    AnimatedSwitcher(
+                      duration: Duration(milliseconds: 500),
+                      child: IconButton(
+                        iconSize: 100,
                         icon: Icon(
-                          CupertinoIcons.refresh,
-                          size: 100,
-                          color: Colors.white,
+                          !isPlaying
+                              ? CupertinoIcons.play_arrow_solid
+                              : CupertinoIcons.pause_fill,
+                          color: Colors.white.withOpacity(.3),
                         ),
                         onPressed: () {
                           if (!inFocus) {
@@ -84,44 +72,41 @@ class OverlayActions extends StatelessWidget {
                           }
                         },
                       ),
-                      SizedBox(
-                        width: 16,
-                      ),
-                      ValueListenableBuilder<List<Marker>>(
-                          valueListenable: ValueNotifier(markers),
-                          builder: (context, value, child) {
-                            if (value.isEmpty) {
-                              return SizedBox();
-                            } else {
-                              return TextButton.icon(
-                                label: Text("Cut",
-                                    style: context.headline1
-                                        .copyWith(color: Colors.white)),
-                                style: GlobalStyles.buttonStyle(
-                                    color: GlobalColors.primaryGrey
-                                        .withOpacity(.6)),
-                                icon: Icon(
-                                  CupertinoIcons.scissors_alt,
-                                  size: 44,
+                    ),
+                  Visibility(
+                    visible: finishedPlaying,
+                    child: AnimatedOpacity(
+                      opacity: finishedPlaying ? 1.0 : 0.0,
+                      duration: kThemeAnimationDuration,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton.icon(
+                            label: Text("Restart",
+                                style: context.bodyText1.copyWith(
                                   color: Colors.white,
-                                ),
-                                onPressed: () {
-                                  if (!inFocus && finishedPlaying) {
-                                    //open cut dialog
-                                    final videoPath =
-                                        context.read<PlaybackRepository>().path;
-                                    final markers =
-                                        context.read<MarkerCubit>().markers;
-                                    openCutDialog(context, videoPath, markers);
-                                  }
-                                },
-                              );
-                            }
-                          }),
-                    ],
-                  ),
-                )
-              ],
+                                  fontSize: 32,
+                                )),
+                            style: GlobalStyles.buttonStyle(
+                                color:
+                                    GlobalColors.primaryGrey.withOpacity(.6)),
+                            icon: Icon(
+                              CupertinoIcons.refresh,
+                              size: 38,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              if (!inFocus) {
+                                onPressed();
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
         ),

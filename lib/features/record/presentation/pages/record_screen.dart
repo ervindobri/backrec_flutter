@@ -70,6 +70,9 @@ class _RecordScreenState extends State<RecordScreen>
                       recording = false;
                       video = state.video;
                     });
+                    context
+                        .read<PlaybackBloc>()
+                        .add(InitializeThumbnailEvent(video));
                   }
                 },
               ),
@@ -167,6 +170,7 @@ class _RecordScreenState extends State<RecordScreen>
                                   valueListenable:
                                       ValueNotifier(alreadyRecorded),
                                   builder: (context, value, child) {
+                                    print(value);
                                     if (value) {
                                       return Padding(
                                         padding:
@@ -174,11 +178,8 @@ class _RecordScreenState extends State<RecordScreen>
                                         child: MultiBlocProvider(
                                           providers: [
                                             BlocProvider(
-                                              create: (context) => sl<
-                                                  PlaybackBloc>()
-                                                ..add(InitializeThumbnailEvent(
-                                                    video)),
-                                            ),
+                                                create: (context) => context
+                                                    .read<PlaybackBloc>()),
                                             BlocProvider(
                                               create: (context) =>
                                                   sl<RecordBloc>(),
