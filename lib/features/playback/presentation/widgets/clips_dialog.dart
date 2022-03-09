@@ -20,11 +20,11 @@ void openUploadDialog(BuildContext context, String videoPath) {
     useSafeArea: false,
     builder: (context) => MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (context) => trimmerCubit,
+        BlocProvider.value(
+          value: trimmerCubit,
         ),
-        BlocProvider(
-          create: (context) => markerCubit,
+        BlocProvider.value(
+          value: markerCubit,
         ),
       ],
       child: UploadDialog(
@@ -34,6 +34,7 @@ void openUploadDialog(BuildContext context, String videoPath) {
   );
 }
 
+//TODO!: display clip thumbnail for each clip saved 
 class UploadDialog extends StatefulWidget {
   final String videoName;
   const UploadDialog({Key? key, required this.videoName}) : super(key: key);

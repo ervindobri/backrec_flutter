@@ -32,6 +32,7 @@ class MarkerCubit extends Cubit<MarkerState> {
   }
 
   Future<void> saveData(String videoName) async {
+    print(videoName);
     emit(MarkerLoading());
     await repository.saveMarkers(videoName);
     emit(MarkerSaved());
@@ -53,9 +54,8 @@ class MarkerCubit extends Cubit<MarkerState> {
   }
 
   Marker? findPreviousMarker(Duration elapsed) {
-    print("Elapsed: ${elapsed.inMilliseconds}");
-    print(markers);
-    if (markers.length > 0 && elapsed.inMilliseconds > 10) {
+    // print("Elapsed: ${elapsed.inMilliseconds}");
+    if (markers.isNotEmpty && elapsed.inMilliseconds > 10) {
       Marker closest = markers
           .where((element) => element.startPosition.compareTo(elapsed) < 0)
           .reduce((a, b) {
@@ -66,14 +66,14 @@ class MarkerCubit extends Cubit<MarkerState> {
             ? a
             : b;
       });
-      print("Closest: ${closest.startPosition}");
+      // print("Closest: ${closest.startPosition}");
       return closest;
     }
     return null;
   }
 
   Marker? findNextMarker(Duration elapsed) {
-    if (markers.length > 0) {
+    if (markers.isNotEmpty) {
       Marker? firstMarker = markers
           .where((element) => element.startPosition.compareTo(elapsed) >= 0)
           .toList()
@@ -109,7 +109,7 @@ class MarkerCubit extends Cubit<MarkerState> {
   void deleteMarker(Marker marker) {}
 
   bool isInterfereing(Duration elapsed) {
-    print(elapsed);
+    // print(elapsed);
     final clipDuration = Duration(seconds: 12);
     for (var item in markers) {
       print(item.startPosition.compareTo(elapsed));
@@ -129,10 +129,13 @@ class MarkerCubit extends Cubit<MarkerState> {
   }
 
   noMoreMarkers(Duration elapsed) {
-    final lastMarker = markers
-        .reduce((a, b) => a.endPosition.compareTo(b.endPosition) > 0 ? a : b);
-    if (elapsed.compareTo(lastMarker.endPosition) > 0) {
-      return true;
+    if (markers.isNotEmpty) {
+      final lastMarker = markers
+          .reduce((a, b) => a.endPosition.compareTo(b.endPosition) > 0 ? a : b);
+      if (elapsed.compareTo(lastMarker.endPosition) > 0) {
+        return true;
+      }
+      return false;
     }
     return false;
   }

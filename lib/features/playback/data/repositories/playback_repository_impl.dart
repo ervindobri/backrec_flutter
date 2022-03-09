@@ -96,8 +96,7 @@ class PlaybackRepositoryImpl implements PlaybackRepository {
   }
 
   @override
-  Future<Either<Failure, Uint8List>> initializeThumbnail(
-      String video) async {
+  Future<Either<Failure, Uint8List>> initializeThumbnail(String video) async {
     return await _initializeThumbnail(() {
       return localDataSource.initializeThumbnail(video);
     });

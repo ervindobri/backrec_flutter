@@ -88,299 +88,310 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
     final double leftPadding = notchPadding.left > 0.0 ? notchPadding.left : 10;
     final double rightPadding =
         notchPadding.right > 0.0 ? notchPadding.right : 10;
+    final double topPadding = notchPadding.top > 0.0 ? notchPadding.top : 10;
     return Scaffold(
-        body: BlocListener<MarkerCubit, MarkerState>(
-      listener: (context, state) {
-        if (state is MarkerRemoved) {
-          UiUtils.showToast("Marker deleted!");
-        }
-      },
-      child: BlocConsumer<PlaybackBloc, PlaybackState>(
+        body: Padding(
+      padding: EdgeInsets.fromLTRB(0, topPadding, 0, 0),
+      child: BlocListener<MarkerCubit, MarkerState>(
         listener: (context, state) {
-          if (state is PlaybackInitialized) {
-            controller = state.controller;
-            controller.addListener(videoPlayerListener);
-          } else if (state is PlaybackError) {
-            // print("PlaybackError: ${state.message}");
-          } else if (state is MarkerPlayback) {
-            setState(() {
-              currentMarker = state.marker;
-            });
+          if (state is MarkerRemoved) {
+            UiUtils.showToast("Marker deleted!");
           }
         },
-        buildWhen: (oldState, newState) =>
-            oldState.runtimeType != newState.runtimeType,
-        builder: (context, state) {
-          // print(state);
-          if (state is PlaybackInitialized ||
-              state is PlaybackPlaying ||
-              state is PlaybackStopped ||
-              state is MarkerPlayback) {
-            // final service = context.read<PlaybackBloc>().service;
-            return ValueListenableBuilder(
-                valueListenable: controller,
-                builder: (context, VideoPlayerValue value, child) {
-                  final isPlaying = value.isPlaying;
-                  final totalDuration = value.duration;
-                  final elapsed = value.position;
-                  final size = MediaQuery.of(context).size;
-                  final deviceRatio = size.width / size.height;
-                  final finished = elapsed == value.duration;
-                  return Container(
-                      width: width,
-                      height: height,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.cover,
-                            child: Transform.scale(
-                              alignment: Alignment.center,
-                              scale: deviceRatio / controller.value.aspectRatio,
-                              child: SizedBox(
-                                width: value.size.width,
-                                height: value.size.height,
-                                child: VideoPlayer(controller),
+        child: BlocConsumer<PlaybackBloc, PlaybackState>(
+          listener: (context, state) {
+            if (state is PlaybackInitialized) {
+              controller = state.controller;
+              controller.addListener(videoPlayerListener);
+            } else if (state is PlaybackError) {
+              // print("PlaybackError: ${state.message}");
+            } else if (state is MarkerPlayback) {
+              setState(() {
+                currentMarker = state.marker;
+              });
+            }
+          },
+          buildWhen: (oldState, newState) =>
+              oldState.runtimeType != newState.runtimeType,
+          builder: (context, state) {
+            // print(state);
+            if (state is PlaybackInitialized ||
+                state is PlaybackPlaying ||
+                state is PlaybackStopped ||
+                state is MarkerPlayback) {
+              // final service = context.read<PlaybackBloc>().service;
+              return ValueListenableBuilder(
+                  valueListenable: controller,
+                  builder: (context, VideoPlayerValue value, child) {
+                    final isPlaying = value.isPlaying;
+                    final totalDuration = value.duration;
+                    final elapsed = value.position;
+                    final size = MediaQuery.of(context).size;
+                    final deviceRatio = size.width / size.height;
+                    final finished = elapsed == value.duration;
+                    return Container(
+                        width: width,
+                        height: height,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.cover,
+                              child: Transform.scale(
+                                alignment: Alignment.center,
+                                scale:
+                                    deviceRatio / controller.value.aspectRatio,
+                                child: SizedBox(
+                                  width: value.size.width,
+                                  height: value.size.height,
+                                  child: VideoPlayer(controller),
+                                ),
                               ),
                             ),
-                          ),
-                          //big play button
-                          Padding(
-                            padding: notchPadding,
-                            child: MultiBlocProvider(
-                              providers: [
-                                BlocProvider(
-                                  create: (context) => sl<PlaybackBloc>(),
-                                ),
-                                BlocProvider(
-                                  create: (context) => sl<MarkerCubit>(),
-                                ),
-                              ],
-                              child: OverlayActions(
-                                finishedPlaying: finished,
-                                setFocus: () => setFocus(isPlaying),
-                                onPressed: () {
-                                  if (isPlaying) {
-                                    context
-                                        .read<PlaybackBloc>()
-                                        .add(StopPlaybackEvent());
-                                    setFocus(isPlaying, instant: false);
-                                  } else {
-                                    context
-                                        .read<PlaybackBloc>()
-                                        .add(StartPlaybackEvent());
-                                    setFocus(false, instant: false);
-                                  }
-                                },
-                                inFocus: _inFocus,
-                                isPlaying: isPlaying,
-                              ),
-                            ),
-                          ),
-                          //back button
-                          AnimatedPositioned(
-                            left: leftPadding,
-                            top: !_inFocus ? 10 : -50,
-                            duration: kThemeAnimationDuration,
-                            child: AnimatedOpacity(
-                              duration: kThemeAnimationDuration,
-                              opacity: !_inFocus ? 1.0 : 0.3,
-                              child: BlurryIconButton(
-                                onPressed: () {
-                                  NavUtils.back(context);
-                                  context
-                                      .read<PlaybackBloc>()
-                                      .add(PlaybackVolumeEvent(0.0));
-                                },
-                                icon: FeatherIcons.chevronLeft,
-                                decoration: TextDecoration.underline,
-                                label: "Record",
-                              ),
-                            ),
-                          ),
-                          //bottom bar, actions and buttons
-                          AnimatedPositioned(
-                            bottom: _inFocus ? -32 : 0,
-                            left: 0,
-                            duration: kThemeAnimationDuration,
-                            child: MultiRepositoryProvider(
-                              providers: [
-                                RepositoryProvider(
-                                  create: (context) => sl<MarkerRepository>(),
-                                ),
-                                RepositoryProvider(
-                                  create: (context) => sl<PlaybackRepository>(),
-                                ),
-                              ],
+                            //big play button
+                            Padding(
+                              padding: notchPadding,
                               child: MultiBlocProvider(
                                 providers: [
                                   BlocProvider(
-                                    create: (context) => sl<MarkerCubit>(),
-                                  ),
-                                  BlocProvider(
                                     create: (context) => sl<PlaybackBloc>(),
                                   ),
+                                  BlocProvider(
+                                    create: (context) => sl<MarkerCubit>(),
+                                  ),
                                 ],
-                                child: VideoPlayerActions(
-                                    onPause: () {
+                                child: OverlayActions(
+                                  finishedPlaying: finished,
+                                  setFocus: () => setFocus(isPlaying),
+                                  onPressed: () {
+                                    if (isPlaying) {
                                       context
                                           .read<PlaybackBloc>()
                                           .add(StopPlaybackEvent());
-                                      setFocus(true);
-                                    },
-                                    onPlay: () {
+                                      setFocus(isPlaying, instant: false);
+                                    } else {
                                       context
                                           .read<PlaybackBloc>()
                                           .add(StartPlaybackEvent());
-                                      setFocus(true);
-                                    },
-                                    onMarkerTap: (marker) {
-                                      // print("Seek: ${marker.endPosition}");
-                                      context.read<PlaybackBloc>().add(
-                                          SeekPlaybackEvent(
-                                              marker.endPosition));
-                                      currentMarker = marker;
-                                    },
-                                    onJumpBackward: () {
-                                      jumpToPreviousMarker(elapsed);
-                                      UiUtils.vibrate();
-                                      setFocus(isPlaying);
-                                    },
-                                    onJumpForward: () {
-                                      jumpToNextMarker(elapsed);
-                                      UiUtils.vibrate();
-                                      setFocus(isPlaying);
-                                    },
-                                    // markers: markers,
-                                    controller: controller,
-                                    inFocus: _inFocus,
-                                    isPlaying: isPlaying,
-                                    awayTeam: widget.awayTeam,
-                                    homeTeam: widget.homeTeam,
-                                    totalDuration: totalDuration,
-                                    currentMarker: currentMarker,
-                                    onSeek: (duration) {
-                                      // print("Seek: ");
-                                      context
-                                          .read<PlaybackBloc>()
-                                          .add(SeekPlaybackEvent(duration));
-                                    },
-                                    setTeams: (home, away) {},
-                                    onMarkerPlayback: () {
-                                      final markers =
-                                          context.read<MarkerCubit>().markers;
-                                      context
-                                          .read<PlaybackBloc>()
-                                          .add(MarkerPlaybackEvent(markers));
-                                    }),
+                                      setFocus(false, instant: false);
+                                    }
+                                  },
+                                  inFocus: _inFocus,
+                                  isPlaying: isPlaying,
+                                ),
                               ),
                             ),
-                          ),
-                          Align(
-                              alignment: Alignment.topCenter,
-                              child: ValueListenableBuilder<Marker?>(
-                                  valueListenable: ValueNotifier(currentMarker),
-                                  builder: (context, value, child) {
-                                    if (value == null) {
-                                      return SizedBox();
-                                    }
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 10.0),
-                                      child: MarkerInfo(
-                                        marker: currentMarker!,
-                                        homeTeam: widget.homeTeam,
-                                        awayTeam: widget.awayTeam,
-                                        visible: isMarkerVisible,
-                                        onMarkerConfigured: (marker) {
-                                          context
-                                              .read<MarkerCubit>()
-                                              .updateMarker(marker);
-                                          setState(() {});
-                                        },
-                                        onDelete: () {
-                                          context
-                                              .read<MarkerCubit>()
-                                              .removeMarker(currentMarker!);
-                                          setState(() {});
-                                        },
-                                      ),
-                                    );
-                                  })),
-                          Positioned(
-                              right: rightPadding,
-                              top: 10,
-                              child: Tooltip(
-                                  message: 'Add new marker',
-                                  verticalOffset: 30,
-                                  decoration: BoxDecoration(
-                                      color: GlobalColors.primaryRed,
-                                      borderRadius: BorderRadius.circular(10)),
-                                  child: NewMarkerButton(
-                                    endPosition: elapsed,
-                                    onTap: () async {
-                                      context
-                                          .read<PlaybackBloc>()
-                                          .add(StopPlaybackEvent());
-                                      setFocus(true);
-                                      final interfering = context
-                                          .read<MarkerCubit>()
-                                          .isInterfereing(elapsed);
-                                      if (!interfering) {
-                                        showDialog(
-                                            context: context,
-                                            useSafeArea: false,
-                                            builder: (_) => MarkerDialog(
-                                                  endPosition: elapsed,
-                                                  homeTeam: widget.homeTeam,
-                                                  awayTeam: widget.awayTeam,
-                                                  onMarkerConfigured: (marker) {
-                                                    // service.saveMarker(marker);
-                                                    UiUtils.showToast(
-                                                        "Marker created successfully!");
-                                                    context
-                                                        .read<MarkerCubit>()
-                                                        .addMarker(marker);
-                                                    setState(() {});
-                                                  },
-                                                  onCancel: () {},
-                                                  onDelete: () {
-                                                    // context.read<MarkerCubit>().removeMarker(marker);
-                                                  },
-                                                ));
-                                      } else {
-                                        UiUtils.showToast(
-                                            "New marker is interfereing with existing ones!");
-                                      }
-                                    },
-                                  ))),
-                          AnimatedPositioned(
-                            right: noMoreMarkers ? rightPadding : -100.0,
-                            top: 78,
-                            duration: kThemeAnimationDuration,
-                            child: BlurryIconButton(
-                              onPressed: () {
-                                final videoPath = sl<PlaybackRepository>().path;
-                                final markers = sl<MarkerCubit>().markers;
-                                //open cut dialog
-                                context
-                                    .read<PlaybackBloc>()
-                                    .add(StopPlaybackEvent());
-                                openCutDialog(context, videoPath, markers);
-                              },
-                              color: GlobalColors.primaryRed,
-                              label: "Cut",
-                              icon: CupertinoIcons.scissors_alt,
+                            //back button
+                            AnimatedPositioned(
+                              left: leftPadding,
+                              top: !_inFocus ? 10 : -50,
+                              duration: kThemeAnimationDuration,
+                              child: AnimatedOpacity(
+                                duration: kThemeAnimationDuration,
+                                opacity: !_inFocus ? 1.0 : 0.3,
+                                child: BlurryIconButton(
+                                  onPressed: () {
+                                    NavUtils.back(context);
+                                    context
+                                        .read<PlaybackBloc>()
+                                        .add(PlaybackVolumeEvent(0.0));
+                                  },
+                                  icon: FeatherIcons.chevronLeft,
+                                  decoration: TextDecoration.underline,
+                                  label: "Record",
+                                ),
+                              ),
                             ),
-                          )
-                        ],
-                      ));
-                });
-          } else {
-            return Center(
-                child:
-                    CircularProgressIndicator(color: GlobalColors.primaryRed));
-          }
-        },
+                            //bottom bar, actions and buttons
+                            AnimatedPositioned(
+                              bottom: _inFocus ? -32 : 0,
+                              left: 0,
+                              duration: kThemeAnimationDuration,
+                              child: MultiRepositoryProvider(
+                                providers: [
+                                  RepositoryProvider(
+                                    create: (context) => sl<MarkerRepository>(),
+                                  ),
+                                  RepositoryProvider(
+                                    create: (context) =>
+                                        sl<PlaybackRepository>(),
+                                  ),
+                                ],
+                                child: MultiBlocProvider(
+                                  providers: [
+                                    BlocProvider(
+                                      create: (context) => sl<MarkerCubit>(),
+                                    ),
+                                    BlocProvider(
+                                      create: (context) => sl<PlaybackBloc>(),
+                                    ),
+                                  ],
+                                  child: VideoPlayerActions(
+                                      onPause: () {
+                                        context
+                                            .read<PlaybackBloc>()
+                                            .add(StopPlaybackEvent());
+                                        setFocus(true);
+                                      },
+                                      onPlay: () {
+                                        context
+                                            .read<PlaybackBloc>()
+                                            .add(StartPlaybackEvent());
+                                        setFocus(true);
+                                      },
+                                      onMarkerTap: (marker) {
+                                        // print("Seek: ${marker.endPosition}");
+                                        context.read<PlaybackBloc>().add(
+                                            SeekPlaybackEvent(
+                                                marker.endPosition));
+                                        currentMarker = marker;
+                                      },
+                                      onJumpBackward: () {
+                                        jumpToPreviousMarker(elapsed);
+                                        UiUtils.vibrate();
+                                      },
+                                      onJumpForward: () {
+                                        jumpToNextMarker(elapsed);
+                                        UiUtils.vibrate();
+                                      },
+                                      // markers: markers,
+                                      controller: controller,
+                                      inFocus: _inFocus,
+                                      isPlaying: isPlaying,
+                                      awayTeam: widget.awayTeam,
+                                      homeTeam: widget.homeTeam,
+                                      totalDuration: totalDuration,
+                                      currentMarker: currentMarker,
+                                      onSeek: (duration) {
+                                        // print("Seek: ");
+                                        context
+                                            .read<PlaybackBloc>()
+                                            .add(SeekPlaybackEvent(duration));
+                                      },
+                                      setTeams: (home, away) {},
+                                      onMarkerPlayback: () {
+                                        final markers =
+                                            context.read<MarkerCubit>().markers;
+                                        context
+                                            .read<PlaybackBloc>()
+                                            .add(MarkerPlaybackEvent(markers));
+                                      }),
+                                ),
+                              ),
+                            ),
+                            Align(
+                                alignment: Alignment.topCenter,
+                                child: ValueListenableBuilder<Marker?>(
+                                    valueListenable:
+                                        ValueNotifier(currentMarker),
+                                    builder: (context, value, child) {
+                                      if (value == null) {
+                                        return SizedBox();
+                                      }
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 10.0),
+                                        child: MarkerInfo(
+                                          marker: currentMarker!,
+                                          homeTeam: widget.homeTeam,
+                                          awayTeam: widget.awayTeam,
+                                          visible: isMarkerVisible,
+                                          onMarkerConfigured: (marker) {
+                                            context
+                                                .read<MarkerCubit>()
+                                                .updateMarker(marker);
+                                            setState(() {});
+                                          },
+                                          onDelete: () {
+                                            context
+                                                .read<MarkerCubit>()
+                                                .removeMarker(currentMarker!);
+                                            setState(() {});
+                                          },
+                                        ),
+                                      );
+                                    })),
+                            Positioned(
+                                right: rightPadding,
+                                top: 10,
+                                child: Tooltip(
+                                    message: 'Add new marker',
+                                    verticalOffset: 30,
+                                    decoration: BoxDecoration(
+                                        color: GlobalColors.primaryRed,
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    child: NewMarkerButton(
+                                      endPosition: elapsed,
+                                      onTap: () async {
+                                        context
+                                            .read<PlaybackBloc>()
+                                            .add(StopPlaybackEvent());
+                                        setFocus(true);
+                                        final interfering = context
+                                            .read<MarkerCubit>()
+                                            .isInterfereing(elapsed);
+                                        if (!interfering) {
+                                          showDialog(
+                                              context: context,
+                                              useSafeArea: false,
+                                              builder: (_) => MarkerDialog(
+                                                    endPosition: elapsed,
+                                                    homeTeam: widget.homeTeam,
+                                                    awayTeam: widget.awayTeam,
+                                                    onMarkerConfigured:
+                                                        (marker) {
+                                                      // service.saveMarker(marker);
+                                                      UiUtils.showToast(
+                                                          "Marker created successfully!");
+                                                      context
+                                                          .read<MarkerCubit>()
+                                                          .addMarker(marker);
+                                                      setState(() {});
+                                                    },
+                                                    onCancel: () {},
+                                                    onDelete: () {
+                                                      // context.read<MarkerCubit>().removeMarker(marker);
+                                                    },
+                                                  ));
+                                        } else {
+                                          UiUtils.showToast(
+                                              "New marker is interfereing with existing ones!");
+                                        }
+                                      },
+                                    ))),
+                            AnimatedPositioned(
+                              right: noMoreMarkers ? rightPadding : -100.0,
+                              top: 78,
+                              duration: kThemeAnimationDuration,
+                              child: BlurryIconButton(
+                                onPressed: () {
+                                  final videoPath =
+                                      sl<PlaybackRepository>().path;
+                                  final markers = sl<MarkerCubit>().markers;
+                                  //open cut dialog
+                                  context
+                                      .read<PlaybackBloc>()
+                                      .add(StopPlaybackEvent());
+                                  context.read<MarkerCubit>().saveData(
+                                      sl<PlaybackRepository>().videoNameParsed);
+                                  openCutDialog(context, videoPath, markers);
+                                },
+                                color: GlobalColors.primaryRed,
+                                label: "Cut",
+                                icon: CupertinoIcons.scissors_alt,
+                              ),
+                            )
+                          ],
+                        ));
+                  });
+            } else {
+              return Center(
+                  child: CircularProgressIndicator(
+                      color: GlobalColors.primaryRed));
+            }
+          },
+        ),
       ),
     ));
   }
@@ -409,6 +420,7 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
       context
           .read<PlaybackBloc>()
           .add(SeekPlaybackEvent(nextMarker.startPosition));
+      context.read<PlaybackBloc>().add(StartPlaybackEvent());
     }
   }
 

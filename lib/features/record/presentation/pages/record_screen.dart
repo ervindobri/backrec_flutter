@@ -38,6 +38,10 @@ class _RecordScreenState extends State<RecordScreen>
 
   bool picked = false;
 
+  double x = 0;
+  double y = 0;
+  bool showFocusCircle = false;
+
   @override
   void initState() {
     picked = false;
@@ -49,229 +53,238 @@ class _RecordScreenState extends State<RecordScreen>
     // final notchPadding = MediaQuery.of(context).viewPadding;
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
+    final notchPadding = MediaQuery.of(context).viewPadding;
+    final double topPadding = notchPadding.top > 0.0 ? notchPadding.top : 10;
+
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
           backgroundColor: Colors.white,
-          body: MultiBlocListener(
-            listeners: [
-              BlocListener<RecordBloc, RecordState>(
-                listener: (context, state) {
-                  UiUtils.showToast(state.toString());
-                  print(state);
-                  if (state is RecordingError) {
-                    print(state.message);
-                    setState(() => recording = false);
-                  } else if (state is RecordingStarted) {
-                    setState(() => recording = true);
-                  } else if (state is RecordingStopped) {
-                    setState(() {
-                      alreadyRecorded = true;
-                      recording = false;
-                      video = state.video;
-                    });
-                    context
-                        .read<PlaybackBloc>()
-                        .add(InitializeThumbnailEvent(video));
-                  }
-                },
-              ),
-              BlocListener<TimerBloc, TimerState>(
-                listener: (context, state) {
-                  // print(state);
-                },
-              ),
-            ],
-            child:
-                BlocBuilder<CameraBloc, CameraState>(builder: (context, state) {
-              Widget loadedWidget = SizedBox();
-              if (state is CameraLoading) {
-                loadedWidget = Center(
-                  child:
-                      CircularProgressIndicator(color: GlobalColors.primaryRed),
-                );
-              } else if (state is CameraInitialized) {
-                loadedWidget = _cameraPreviewWidget(state.controller);
-              }
-              return NativeDeviceOrientationReader(builder: (context) {
-                final orientation =
-                    NativeDeviceOrientationReader.orientation(context);
-                final double leftPadding =
-                    orientation == NativeDeviceOrientation.landscapeLeft
-                        ? 32
-                        : 0;
-                final double rightPadding =
-                    orientation == NativeDeviceOrientation.landscapeRight
-                        ? 32
-                        : 0;
-                return Container(
-                  width: width,
-                  height: height,
-                  color: Colors.black,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      loadedWidget, //camera
-                      BlocProvider(
-                        create: (context) => context.read<TimerBloc>(),
-                        child: ValueListenableBuilder<bool>(
-                          valueListenable: ValueNotifier(recording),
-                          builder: (context, value, child) {
-                            if (value) {
-                              return child!;
-                            }
-                            return SizedBox();
-                          },
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: RecordTime(),
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.topCenter,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 20.0),
-                          child: TeamSelector(
-                            setTeams: (home, away) {
-                              setState(() {
-                                homeTeam = home;
-                                awayTeam = away;
-                              });
+          body: Padding(
+            padding: EdgeInsets.fromLTRB(0, topPadding, 0, 0),
+            child: MultiBlocListener(
+              listeners: [
+                BlocListener<RecordBloc, RecordState>(
+                  listener: (context, state) {
+                    UiUtils.showToast(state.toString());
+                    print(state);
+                    if (state is RecordingError) {
+                      print(state.message);
+                      setState(() => recording = false);
+                    } else if (state is RecordingStarted) {
+                      setState(() => recording = true);
+                    } else if (state is RecordingStopped) {
+                      setState(() {
+                        alreadyRecorded = true;
+                        recording = false;
+                        video = state.video;
+                      });
+                      context
+                          .read<PlaybackBloc>()
+                          .add(InitializeThumbnailEvent(video));
+                    }
+                  },
+                ),
+                BlocListener<TimerBloc, TimerState>(
+                  listener: (context, state) {
+                    // print(state);
+                  },
+                ),
+              ],
+              child: BlocBuilder<CameraBloc, CameraState>(
+                  builder: (context, state) {
+                Widget loadedWidget = SizedBox();
+                if (state is CameraLoading) {
+                  loadedWidget = Center(
+                    child: CircularProgressIndicator(
+                        color: GlobalColors.primaryRed),
+                  );
+                } else if (state is CameraInitialized) {
+                  loadedWidget = _cameraPreviewWidget(state.controller);
+                }
+                return NativeDeviceOrientationReader(builder: (context) {
+                  final orientation =
+                      NativeDeviceOrientationReader.orientation(context);
+                  final double leftPadding =
+                      orientation == NativeDeviceOrientation.landscapeLeft
+                          ? 32
+                          : 0;
+                  final double rightPadding =
+                      orientation == NativeDeviceOrientation.landscapeRight
+                          ? 32
+                          : 0;
+                  return Container(
+                    width: width,
+                    height: height,
+                    color: Colors.black,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        loadedWidget, //camera
+                        BlocProvider(
+                          create: (context) => context.read<TimerBloc>(),
+                          child: ValueListenableBuilder<bool>(
+                            valueListenable: ValueNotifier(recording),
+                            builder: (context, value, child) {
+                              if (value) {
+                                return child!;
+                              }
+                              return SizedBox();
                             },
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: RecordTime(),
+                            ),
                           ),
                         ),
-                      ),
-                      Positioned(
-                        right: 20 + rightPadding,
-                        child: RecordButton(
-                          onRecord: () {
-                            if (!recording) {
-                              context
-                                  .read<RecordBloc>()
-                                  .add(StartRecordEvent());
-                              context.read<TimerBloc>().add(TimerStarted());
-                              UiUtils.vibrate();
-                            } else {
-                              context.read<RecordBloc>().add(StopRecordEvent());
-                              context.read<TimerBloc>().add(TimerReset());
-                              UiUtils.vibrate(duration: 200);
-                            }
-                          },
-                          recordingStarted: recording,
+                        Align(
+                          alignment: Alignment.topCenter,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 20.0),
+                            child: TeamSelector(
+                              setTeams: (home, away) {
+                                setState(() {
+                                  homeTeam = home;
+                                  awayTeam = away;
+                                });
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                      Positioned(
+                        Positioned(
                           right: 20 + rightPadding,
-                          bottom: 20,
-                          child: Row(
-                            children: [
-                              ValueListenableBuilder<bool>(
-                                  valueListenable:
-                                      ValueNotifier(alreadyRecorded),
-                                  builder: (context, value, child) {
-                                    print(value);
-                                    if (value) {
-                                      return Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 16.0),
-                                        child: MultiBlocProvider(
-                                          providers: [
-                                            BlocProvider(
-                                                create: (context) => context
-                                                    .read<PlaybackBloc>()),
-                                            BlocProvider(
-                                              create: (context) =>
-                                                  sl<RecordBloc>(),
+                          child: RecordButton(
+                            onRecord: () {
+                              if (!recording) {
+                                context
+                                    .read<RecordBloc>()
+                                    .add(StartRecordEvent());
+                                context.read<TimerBloc>().add(TimerStarted());
+                                UiUtils.vibrate();
+                              } else {
+                                context
+                                    .read<RecordBloc>()
+                                    .add(StopRecordEvent());
+                                context.read<TimerBloc>().add(TimerReset());
+                                UiUtils.vibrate(duration: 200);
+                              }
+                            },
+                            recordingStarted: recording,
+                          ),
+                        ),
+                        Positioned(
+                            right: 20 + rightPadding,
+                            bottom: 20,
+                            child: Row(
+                              children: [
+                                ValueListenableBuilder<bool>(
+                                    valueListenable:
+                                        ValueNotifier(alreadyRecorded),
+                                    builder: (context, value, child) {
+                                      print(value);
+                                      if (value) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 16.0),
+                                          child: MultiBlocProvider(
+                                            providers: [
+                                              BlocProvider(
+                                                  create: (context) => context
+                                                      .read<PlaybackBloc>()),
+                                              BlocProvider(
+                                                create: (context) =>
+                                                    sl<RecordBloc>(),
+                                              ),
+                                            ],
+                                            child: RecordedVideoThumbnail(
+                                              video: video,
+                                              homeTeam: homeTeam,
+                                              awayTeam: awayTeam,
+                                              onTap: () async {
+                                                final recordingStarted =
+                                                    sl<RecordingRepository>()
+                                                        .recordingStarted;
+                                                if (recordingStarted) {
+                                                  context
+                                                      .read<RecordBloc>()
+                                                      .add(StopRecordEvent());
+                                                  UiUtils.vibrate();
+                                                }
+                                              },
                                             ),
-                                          ],
-                                          child: RecordedVideoThumbnail(
-                                            video: video,
+                                          ),
+                                        );
+                                      }
+                                      return SizedBox();
+                                    }),
+                                BlocProvider(
+                                  create: (context) => sl<MarkerCubit>(),
+                                  child: VideoSelectorThumbnail(
+                                    awayTeam: awayTeam,
+                                    homeTeam: homeTeam,
+                                    onTap: () async {
+                                      /// If recording started, stop recording and open video from gallery
+                                      // if (controller.recordingStarted.value) {
+                                      //   await controller.recordVideo();
+                                      UiUtils.vibrate();
+                                      setState(() => picked = true);
+
+                                      // }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            )),
+                        ValueListenableBuilder<bool>(
+                            valueListenable: ValueNotifier(recording),
+                            builder: (context, value, child) {
+                              if (value) {
+                                return child!;
+                              }
+                              return SizedBox();
+                            },
+                            child: Positioned(
+                              left: 20 + leftPadding,
+                              bottom: 20,
+                              child: NewMarkerButton(
+                                onTap: () {
+                                  showDialog(
+                                      context: context,
+                                      builder: (_) => MarkerDialog(
+                                            endPosition:
+                                                getCurrentTimerPosition(
+                                                    context),
                                             homeTeam: homeTeam,
                                             awayTeam: awayTeam,
-                                            onTap: () async {
-                                              final recordingStarted =
-                                                  sl<RecordingRepository>()
-                                                      .recordingStarted;
-                                              if (recordingStarted) {
-                                                context
-                                                    .read<RecordBloc>()
-                                                    .add(StopRecordEvent());
-                                                UiUtils.vibrate();
-                                              }
+                                            onMarkerConfigured: (marker) {
+                                              context
+                                                  .read<MarkerCubit>()
+                                                  .addMarker(marker);
+                                              UiUtils.showToast(
+                                                  "Marker created successfully");
                                             },
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                    return SizedBox();
-                                  }),
-                              BlocProvider(
-                                create: (context) => sl<MarkerCubit>(),
-                                child: VideoSelectorThumbnail(
-                                  awayTeam: awayTeam,
-                                  homeTeam: homeTeam,
-                                  onTap: () async {
-                                    /// If recording started, stop recording and open video from gallery
-                                    // if (controller.recordingStarted.value) {
-                                    //   await controller.recordVideo();
-                                    UiUtils.vibrate();
-                                    setState(() => picked = true);
-
-                                    // }
-                                  },
-                                ),
+                                            onCancel: () {},
+                                            onDelete: () {},
+                                          ));
+                                },
+                                onCancel: () {},
+                                endPosition: getCurrentTimerPosition(context),
                               ),
-                            ],
-                          )),
-                      ValueListenableBuilder<bool>(
-                          valueListenable: ValueNotifier(recording),
-                          builder: (context, value, child) {
-                            if (value) {
-                              return child!;
-                            }
-                            return SizedBox();
-                          },
-                          child: Positioned(
-                            left: 20 + leftPadding,
-                            bottom: 20,
-                            child: NewMarkerButton(
-                              onTap: () {
-                                showDialog(
-                                    context: context,
-                                    builder: (_) => MarkerDialog(
-                                          endPosition:
-                                              getCurrentTimerPosition(context),
-                                          homeTeam: homeTeam,
-                                          awayTeam: awayTeam,
-                                          onMarkerConfigured: (marker) {
-                                            context
-                                                .read<MarkerCubit>()
-                                                .addMarker(marker);
-                                            UiUtils.showToast(
-                                                "Marker created successfully");
-                                          },
-                                          onCancel: () {},
-                                          onDelete: () {},
-                                        ));
-                              },
-                              onCancel: () {},
-                              endPosition: getCurrentTimerPosition(context),
-                            ),
-                          )),
-                      // if (picked)
-                      //   Container(
-                      //       width: width,
-                      //       height: height,
-                      //       color: Colors.white.withOpacity(.4),
-                      //       child: Center(
-                      //           child: CircularProgressIndicator(
-                      //               color: GlobalColors.primaryRed)))
-                    ],
-                  ),
-                );
-              });
-            }),
+                            )),
+                        // if (picked)
+                        //   Container(
+                        //       width: width,
+                        //       height: height,
+                        //       color: Colors.white.withOpacity(.4),
+                        //       child: Center(
+                        //           child: CircularProgressIndicator(
+                        //               color: GlobalColors.primaryRed)))
+                      ],
+                    ),
+                  );
+                });
+              }),
+            ),
           )),
     );
   }
@@ -282,21 +295,34 @@ class _RecordScreenState extends State<RecordScreen>
     final deviceRatio = size.width / size.height;
     double scale = controller.value.aspectRatio * deviceRatio;
     if (scale < 1) scale = 1 / scale;
-    return Listener(
-      onPointerDown: (_) => _pointers++,
-      onPointerUp: (_) => _pointers--,
-      child: Transform.scale(
-        alignment: Alignment.center,
-        scale: deviceRatio / controller.value.aspectRatio,
-        child: Center(
-          child: AspectRatio(
-            aspectRatio: controller.value.aspectRatio,
-            child: CameraPreview(
-              controller,
+    return Stack(
+      children: [
+        Listener(
+          onPointerDown: (_) => _pointers++,
+          onPointerUp: (_) => _pointers--,
+          child: Center(
+            child: AspectRatio(
+              aspectRatio: controller.value.aspectRatio,
+              child: GestureDetector(
+                  onTapUp: (details) {
+                    focusCamera(details, controller);
+                  },
+                  child: CameraPreview(controller)),
             ),
           ),
         ),
-      ),
+        if (showFocusCircle)
+          Positioned(
+              top: y,
+              left: x,
+              child: Container(
+                height: 70,
+                width: 70,
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5)),
+              ))
+      ],
     );
   }
 
@@ -308,5 +334,34 @@ class _RecordScreenState extends State<RecordScreen>
     // print("Minutes:$minutes:$seconds $milliSeconds");
     return Duration(
         minutes: minutes, seconds: seconds, milliseconds: milliSeconds);
+  }
+
+  focusCamera(TapUpDetails details, CameraController controller) async {
+    showFocusCircle = true;
+    x = details.localPosition.dx;
+    y = details.localPosition.dy;
+
+    double fullWidth = MediaQuery.of(context).size.width;
+    double cameraHeight = fullWidth * controller.value.aspectRatio;
+
+    double xp = x / fullWidth;
+    double yp = y / cameraHeight;
+
+    Offset point = Offset(xp, yp);
+    print("point : $point");
+
+    // Manually focus
+    await controller.setFocusPoint(point);
+
+    // Manually set light exposure
+    controller.setExposurePoint(point);
+
+    setState(() {
+      Future.delayed(const Duration(seconds: 2)).whenComplete(() {
+        setState(() {
+          showFocusCircle = false;
+        });
+      });
+    });
   }
 }

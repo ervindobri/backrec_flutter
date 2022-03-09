@@ -8,7 +8,6 @@ import 'package:backrec_flutter/features/playback/presentation/pages/playback_sc
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:video_player/video_player.dart';
 
 class RecordedVideoThumbnail extends StatelessWidget {
   final Team? homeTeam, awayTeam;

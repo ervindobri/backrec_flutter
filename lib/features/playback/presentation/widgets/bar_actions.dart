@@ -63,7 +63,7 @@ class VideoPlayerActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
+    // final height = MediaQuery.of(context).size.height;
     final double progressBarPos = 32.0;
     final markers = context.select((MarkerCubit cubit) => cubit.markers);
     final notchPadding = MediaQuery.of(context).viewPadding;
@@ -116,7 +116,7 @@ class VideoPlayerActions extends StatelessWidget {
                             child: IconButton(
                               onPressed: () {
                                 onJumpBackward();
-                                onPlay();
+                                // onPlay();
                               },
                               iconSize: 20,
                               padding: EdgeInsets.zero,
@@ -171,7 +171,7 @@ class VideoPlayerActions extends StatelessWidget {
                               padding: EdgeInsets.zero,
                               onPressed: () {
                                 onJumpForward();
-                                onPlay();
+                                // onPlay();
                               },
                               icon: Container(
                                 width: 34,
@@ -201,12 +201,15 @@ class VideoPlayerActions extends StatelessWidget {
                       child: ValueListenableBuilder(
                           valueListenable: controller,
                           builder: (context, VideoPlayerValue value, child) {
-                            final elapsed =
-                                getDisplayTime(value.position.inMilliseconds);
+                            final elapsed = getDisplayTime(
+                                value.position.inMinutes,
+                                value.position.inSeconds);
 
                             final remaining = getDisplayTime(
-                                value.duration.inMilliseconds -
-                                    value.position.inMilliseconds);
+                                value.duration.inMinutes -
+                                    value.position.inMinutes,
+                                value.duration.inSeconds -
+                                    value.position.inSeconds);
 
                             return Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -278,15 +281,25 @@ class VideoPlayerActions extends StatelessWidget {
                                         onPause();
                                       }),
                             ),
-                            TextButton.icon(
-                              icon: Icon(FeatherIcons.playCircle,
-                                  size: 20, color: GlobalColors.primaryRed),
-                              label: Text(GlobalStrings.playback,
-                                  style: context.bodyText1.copyWith(
-                                      decoration: TextDecoration.underline,
-                                      color: GlobalColors.primaryRed)),
-                              onPressed: onMarkerPlayback,
-                            ),
+                            //playbackbutton
+                            ValueListenableBuilder<List<Marker>>(
+                                valueListenable: ValueNotifier(markers),
+                                builder: (context, value, child) {
+                                  if (value.isNotEmpty) {
+                                    return TextButton.icon(
+                                      icon: Icon(FeatherIcons.playCircle,
+                                          size: 20,
+                                          color: GlobalColors.primaryRed),
+                                      label: Text(GlobalStrings.playback,
+                                          style: context.bodyText1.copyWith(
+                                              decoration:
+                                                  TextDecoration.underline,
+                                              color: GlobalColors.primaryRed)),
+                                      onPressed: onMarkerPlayback,
+                                    );
+                                  }
+                                  return SizedBox();
+                                }),
                             ValueListenableBuilder<bool>(
                               valueListenable: ValueNotifier(
                                   homeTeam != null && awayTeam != null),
@@ -385,11 +398,9 @@ class VideoPlayerActions extends StatelessWidget {
     );
   }
 
-  getDisplayTime(int milliseconds) {
-    final minutesStr =
-        ((milliseconds / 1000) / 60).floor().toString().padLeft(2, '0');
-    final secondsStr =
-        ((milliseconds / 10) % 60).floor().toString().padLeft(2, '0');
+  getDisplayTime(int minutes, int seconds) {
+    final minutesStr = (minutes).floor().toString();
+    final secondsStr = (seconds).floor().toString().padLeft(2, '0');
 
     return "$minutesStr:$secondsStr";
   }

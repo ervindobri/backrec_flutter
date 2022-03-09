@@ -1,12 +1,7 @@
 import 'package:backrec_flutter/core/constants/constants.dart';
 import 'package:backrec_flutter/core/extensions/text_theme_ext.dart';
-import 'package:backrec_flutter/features/playback/domain/repositories/playback_repository.dart';
-import 'package:backrec_flutter/features/playback/presentation/widgets/cut_dialog.dart';
-import 'package:backrec_flutter/features/record/data/models/marker.dart';
-import 'package:backrec_flutter/features/record/presentation/cubit/marker_cubit.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class OverlayActions extends StatelessWidget {
   final VoidCallback onPressed;
@@ -27,7 +22,7 @@ class OverlayActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    final markers = context.select((MarkerCubit cubit) => cubit.markers);
+    // final markers = context.select((MarkerCubit cubit) => cubit.markers);
 
     return Align(
       alignment: Alignment.center,

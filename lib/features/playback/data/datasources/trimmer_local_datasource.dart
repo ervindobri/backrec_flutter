@@ -18,20 +18,11 @@ class TrimmerLocalDataSourceImpl implements TrimmerLocalDataSource {
   @override
   Future<String> trimVideo(String videoPath, List<Marker> markers) async {
     try {
-      final video = File(videoPath);
-      final trimmer = Trimmer();
-      await trimmer.loadVideo(videoFile: video);
+      loadVideo(videoPath);
       print(
           "Saving clips to: ${StorageDir.applicationDocumentsDirectory} ${videoPath.parsedPath}");
-      markers.forEach((marker) {
-        final clipPath = trimmer.saveTrimmedVideo(
-          startValue: marker.startPosition.inMilliseconds.floorToDouble(),
-          endValue: marker.endPosition.inMilliseconds.floorToDouble(),
-          storageDir: StorageDir.applicationDocumentsDirectory,
-          videoFolderName: videoPath.parsedPath,
-          videoFileName: marker.id.toString(),
-        );
-        print(clipPath);
+      markers.forEach((marker) async {
+        await createClip(marker);
       });
       return "Video trimmed successfully!";
     } on Exception catch (e) {

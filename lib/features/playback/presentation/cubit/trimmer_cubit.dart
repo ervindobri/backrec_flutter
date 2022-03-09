@@ -28,4 +28,5 @@ class TrimmerCubit extends Cubit<TrimmerState> {
       TrimmerError(e.message);
     }
   }
+  
 }

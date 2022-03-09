@@ -20,11 +20,11 @@ void openCutDialog(
     useSafeArea: false,
     builder: (context) => MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (context) => trimmerCubit,
+        BlocProvider.value(
+          value: trimmerCubit,
         ),
-        BlocProvider(
-          create: (context) => markerCubit,
+        BlocProvider.value(
+          value: markerCubit,
         ),
       ],
       child: CutDialog(
