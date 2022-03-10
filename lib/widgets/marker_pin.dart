@@ -81,6 +81,6 @@ class MarkerPin extends StatelessWidget {
       Duration endPosition, Duration totalDuration, double totalWidth) {
     final rate = (endPosition.inMicroseconds * totalWidth) /
         totalDuration.inMicroseconds;
-    return rate - 16; // 17pixel offset
+    return rate - 15; // 17pixel offset
   }
 }

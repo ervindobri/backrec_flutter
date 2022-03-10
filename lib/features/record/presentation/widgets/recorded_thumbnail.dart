@@ -14,6 +14,7 @@ class RecordedVideoThumbnail extends StatelessWidget {
   final XFile video;
   // final List<Marker> markers;
   final VoidCallback onTap;
+  final VoidCallback onBack;
 
   const RecordedVideoThumbnail({
     Key? key,
@@ -21,7 +22,7 @@ class RecordedVideoThumbnail extends StatelessWidget {
     this.awayTeam,
     required this.onTap,
     // required this.markers,
-    required this.video,
+    required this.video, required this.onBack,
   }) : super(key: key);
 
   @override
@@ -46,6 +47,7 @@ class RecordedVideoThumbnail extends StatelessWidget {
             child: PlaybackScreen(
               homeTeam: homeTeam,
               awayTeam: awayTeam,
+              onBack: onBack,
             ),
           ),
         );

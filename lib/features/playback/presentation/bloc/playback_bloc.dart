@@ -34,9 +34,10 @@ class PlaybackBloc extends Bloc<PlaybackEvent, PlaybackState> {
   }) : super(PlaybackInitial()) {
     on<PlaybackEvent>((event, emit) async {
       if (event is InitializeThumbnailEvent) {
-        print("InitializeThumbnailEvent - ${event.video.name}");
+        print("InitializeThumbnailEvent - ${event.video?.name}");
+        print("${event.video?.path}, ${event.videoPath}");
         // emit(PlaybackInitializing());
-        final result = await initThumbnail(InitParams(event.video.path));
+        final result = await initThumbnail(InitParams(event.video?.path ?? event.videoPath!));
         emit(result.fold(
           (failure) =>
               PlaybackError(_mapFailureToMessage(failure)), //todo: map errors

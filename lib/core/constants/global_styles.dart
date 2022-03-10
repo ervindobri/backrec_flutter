@@ -30,4 +30,6 @@ class GlobalStyles {
         color: Colors.white,
         width: 3,
       );
+
+  static radius(double radius) => BorderRadius.circular(radius);
 }

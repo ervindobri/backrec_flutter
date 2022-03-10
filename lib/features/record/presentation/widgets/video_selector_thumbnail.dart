@@ -20,10 +20,12 @@ class VideoSelectorThumbnail extends StatelessWidget {
     this.homeTeam,
     this.awayTeam,
     required this.onTap,
+    required this.onBack,
   }) : super(key: key);
 
   final Team? homeTeam, awayTeam;
   final VoidCallback onTap;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +35,16 @@ class VideoSelectorThumbnail extends StatelessWidget {
         onTap: () async {
           try {
             onTap();
+            //Only pick file name so it can be loaded into a video later
             final result = await FilePicker.platform.pickFiles(
-                type: FileType.video, allowCompression: true, withData: true);
+                type: FileType.video,
+                allowCompression: true,
+                withData: false,
+                withReadStream: false);
             if (result != null && result.files.isNotEmpty) {
               PlatformFile video = result.files.first;
-              print(video.name);
               if (video.name != "") {
-                print(video.path);
+                // print(video.path);
                 await sl<MarkerCubit>().loadMarkers(video.name.parsed);
                 NavUtils.to(
                   context,
@@ -54,8 +59,11 @@ class VideoSelectorThumbnail extends StatelessWidget {
                               video.path!, false, false)),
                       ),
                     ],
-                    child:
-                        PlaybackScreen(homeTeam: homeTeam, awayTeam: awayTeam),
+                    child: PlaybackScreen(
+                      homeTeam: homeTeam,
+                      awayTeam: awayTeam,
+                      onBack: onBack,
+                    ),
                   ),
                 );
               }

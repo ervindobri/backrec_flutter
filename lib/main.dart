@@ -7,6 +7,7 @@ import 'package:backrec_flutter/features/record/presentation/cubit/marker_cubit.
 import 'package:backrec_flutter/features/record/presentation/pages/record_screen.dart';
 import 'package:backrec_flutter/injection_container.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wakelock/wakelock.dart';
 import 'injection_container.dart' as di;
@@ -20,10 +21,10 @@ Future<void> main() async {
 }
 
 Future<void> setEnabledOrientations() async {
-  // await SystemChrome.setPreferredOrientations([
-  //   DeviceOrientation.landscapeRight,
-  //   DeviceOrientation.landscapeLeft,
-  // ]);
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeRight,
+    DeviceOrientation.landscapeLeft,
+  ]);
 }
 
 class MyApp extends StatelessWidget {

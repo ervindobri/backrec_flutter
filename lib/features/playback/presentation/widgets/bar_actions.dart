@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:backrec_flutter/core/constants/constants.dart';
 import 'package:backrec_flutter/core/constants/global_strings.dart';
@@ -82,12 +84,17 @@ class VideoPlayerActions extends StatelessWidget {
         child: ClipRRect(
           borderRadius: GlobalStyles.topRadius24,
           child: BackdropFilter(
-            filter: GlobalStyles.highBlur,
-            child: Container(
+            filter: !inFocus
+                ? GlobalStyles.highBlur
+                : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+            child: AnimatedContainer(
+              duration: kThemeAnimationDuration,
               // color: Colors.black,
-              decoration: BoxDecoration(
-                  color: GlobalColors.primaryGrey.withOpacity(.6),
-                  borderRadius: GlobalStyles.topRadius24),
+              decoration: inFocus
+                  ? null
+                  : BoxDecoration(
+                      color: GlobalColors.primaryGrey.withOpacity(.6),
+                      borderRadius: GlobalStyles.topRadius24),
               child: Stack(
                 alignment: Alignment.bottomCenter,
                 // mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -101,7 +108,7 @@ class VideoPlayerActions extends StatelessWidget {
                       height: 48,
                       width: barWidth,
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Tooltip(
                             message: GlobalStrings.jumpToPreviousMarkerTooltip,
@@ -134,28 +141,31 @@ class VideoPlayerActions extends StatelessWidget {
                               ),
                             ),
                           ),
-                          Container(
-                            width: width * .74,
-                            height: 50,
-                            // color: Colors.black,
-                            child: Stack(
-                                children: markers
-                                    .map(
-                                      (e) => MarkerPin(
-                                        marker: e,
-                                        current: e == currentMarker,
-                                        totalWidth: barWidth - 130,
-                                        onMarkerTap: () {
-                                          e.id = markers.indexOf(
-                                              e); //set index if non existent
-                                          onMarkerTap(e);
-                                        },
-                                        totalDuration: totalDuration,
-                                      ),
-                                    )
-                                    .toList()),
+                          AnimatedOpacity(
+                            duration: kThemeAnimationDuration,
+                            opacity: inFocus ? 0.0 : 1.0,
+                            child: Container(
+                              width: barWidth - 64 - 48,
+                              height: 50,
+                              // color: Colors.black,
+                              child: Stack(
+                                  children: markers
+                                      .map(
+                                        (e) => MarkerPin(
+                                          marker: e,
+                                          current: e == currentMarker,
+                                          totalWidth: barWidth - 130,
+                                          onMarkerTap: () {
+                                            e.id = markers.indexOf(
+                                                e); //set index if non existent
+                                            onMarkerTap(e);
+                                          },
+                                          totalDuration: totalDuration,
+                                        ),
+                                      )
+                                      .toList()),
+                            ),
                           ),
-                          SizedBox(width: 12),
                           Tooltip(
                             message: GlobalStrings.jumpToNextMarkerTooltip,
                             textStyle: context.bodyText1.copyWith(
@@ -201,30 +211,29 @@ class VideoPlayerActions extends StatelessWidget {
                       child: ValueListenableBuilder(
                           valueListenable: controller,
                           builder: (context, VideoPlayerValue value, child) {
-                            final elapsed = getDisplayTime(
-                                value.position.inMinutes,
-                                value.position.inSeconds);
+                            final elapsed =
+                                getDisplayTime(value.position.inMilliseconds);
 
                             final remaining = getDisplayTime(
-                                value.duration.inMinutes -
-                                    value.position.inMinutes,
-                                value.duration.inSeconds -
-                                    value.position.inSeconds);
+                                value.duration.inMilliseconds -
+                                    value.position.inMilliseconds);
 
                             return Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 //elapsed
-                                SizedBox(
-                                  width: 32,
+                                Container(
+                                  width: 48,
+                                  // color: Colors.black,
                                   child: Text(elapsed,
+                                      textAlign: TextAlign.center,
                                       style: context.bodyText1.copyWith(
                                           color: Colors.white, fontSize: 12)),
                                 ),
 
                                 //bar
                                 SizedBox(
-                                  width: barWidth - 64 - 32,
+                                  width: barWidth - 64 - 48,
                                   child: ProgressBar(
                                     progress: value.position,
                                     total: value.duration,
@@ -241,9 +250,11 @@ class VideoPlayerActions extends StatelessWidget {
                                   ),
                                 ),
 
-                                SizedBox(
-                                  width: 32,
+                                Container(
+                                  width: 48,
+                                  // color: Colors.black,
                                   child: Text(remaining,
+                                      textAlign: TextAlign.center,
                                       style: context.bodyText1.copyWith(
                                           color: Colors.white, fontSize: 12)),
                                 ),
@@ -398,9 +409,10 @@ class VideoPlayerActions extends StatelessWidget {
     );
   }
 
-  getDisplayTime(int minutes, int seconds) {
-    final minutesStr = (minutes).floor().toString();
-    final secondsStr = (seconds).floor().toString().padLeft(2, '0');
+  getDisplayTime(int milliSeconds) {
+    final minutesStr = ((milliSeconds / 1000) / 60).floor().toString();
+    final secondsStr =
+        ((milliSeconds / 1000) % 60).floor().toString().padLeft(2, '0');
 
     return "$minutesStr:$secondsStr";
   }

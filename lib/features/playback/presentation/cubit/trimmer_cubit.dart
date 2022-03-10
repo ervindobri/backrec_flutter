@@ -28,5 +28,7 @@ class TrimmerCubit extends Cubit<TrimmerState> {
       TrimmerError(e.message);
     }
   }
-  
+
+  Future<bool> isVideoTrimmed({required String videoName}) async =>
+      await repository.isVideoTrimmed(videoName);
 }

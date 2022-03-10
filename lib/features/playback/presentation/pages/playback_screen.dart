@@ -17,6 +17,7 @@ import 'package:backrec_flutter/features/record/presentation/cubit/marker_cubit.
 import 'package:backrec_flutter/features/record/presentation/widgets/dialogs/marker_dialog.dart';
 import 'package:backrec_flutter/injection_container.dart';
 import 'package:backrec_flutter/features/record/presentation/widgets/add_marker_button.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,7 +26,10 @@ import 'package:video_player/video_player.dart';
 
 class PlaybackScreen extends StatefulWidget {
   final Team? homeTeam, awayTeam;
-  const PlaybackScreen({Key? key, this.homeTeam, this.awayTeam})
+  final VoidCallback onBack;
+
+  const PlaybackScreen(
+      {Key? key, this.homeTeam, this.awayTeam, required this.onBack})
       : super(key: key);
 
   @override
@@ -195,6 +199,8 @@ class _PlaybackScreenState extends State<PlaybackScreen> {
                                     context
                                         .read<PlaybackBloc>()
                                         .add(PlaybackVolumeEvent(0.0));
+                                    widget.onBack();
+                                    FilePicker.platform.clearTemporaryFiles();
                                   },
                                   icon: FeatherIcons.chevronLeft,
                                   decoration: TextDecoration.underline,

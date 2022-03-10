@@ -42,4 +42,10 @@ class TrimmerRepositoryImpl extends TrimmerRepository {
         await localDataSource.loadVideo(videoPath);
 
   }
+
+  @override
+  Future<bool> isVideoTrimmed(String videoPath) {
+    // TODO: implement isVideoTrimmed
+    throw UnimplementedError();
+  }
 }

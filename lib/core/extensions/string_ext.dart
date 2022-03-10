@@ -10,9 +10,9 @@ extension VideoNameParser on String {
     final result = this.substring(startIndex + start.length, endIndex);
     return result; // brown fox jumps
   }
-
+  //remove extension from path
   String get parsed {
-    const extensions = [".mp4", '.MOV', '.mov'];
+    const extensions = [".mp4", '.MOV', '.mov', '.avi', '.AVI', '.vid'];
     for (var item in extensions) {
       final endIndex = this.indexOf(item, 0);
       if (endIndex != -1) {
@@ -25,5 +25,10 @@ extension VideoNameParser on String {
 
   String get parsedPath {
     return this.split('/').last.parsed;
+  }
+
+  // Return video path without extension
+  String get parsedClipFolderPath {
+    return this.parsed;
   }
 }

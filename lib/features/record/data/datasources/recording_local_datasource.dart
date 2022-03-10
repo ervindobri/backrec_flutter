@@ -145,6 +145,7 @@ class RecordingLocalDataSourceImpl implements RecordingLocalDataSource {
       await getCameras();
       return controller!;
     } catch (e) {
+      initializeCamera();
       throw CameraException("ERR", e.toString());
     }
   }

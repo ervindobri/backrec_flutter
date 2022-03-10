@@ -81,7 +81,7 @@ class _RecordScreenState extends State<RecordScreen>
                       });
                       context
                           .read<PlaybackBloc>()
-                          .add(InitializeThumbnailEvent(video));
+                          .add(InitializeThumbnailEvent(video: video));
                     }
                   },
                 ),
@@ -197,21 +197,24 @@ class _RecordScreenState extends State<RecordScreen>
                                               ),
                                             ],
                                             child: RecordedVideoThumbnail(
-                                              video: video,
-                                              homeTeam: homeTeam,
-                                              awayTeam: awayTeam,
-                                              onTap: () async {
-                                                final recordingStarted =
-                                                    sl<RecordingRepository>()
-                                                        .recordingStarted;
-                                                if (recordingStarted) {
-                                                  context
-                                                      .read<RecordBloc>()
-                                                      .add(StopRecordEvent());
-                                                  UiUtils.vibrate();
-                                                }
-                                              },
-                                            ),
+                                                video: video,
+                                                homeTeam: homeTeam,
+                                                awayTeam: awayTeam,
+                                                onTap: () async {
+                                                  final recordingStarted =
+                                                      sl<RecordingRepository>()
+                                                          .recordingStarted;
+                                                  if (recordingStarted) {
+                                                    context
+                                                        .read<RecordBloc>()
+                                                        .add(StopRecordEvent());
+                                                    UiUtils.vibrate();
+                                                  }
+                                                },
+                                                onBack: () {
+                                                  setState(
+                                                      () => picked = false);
+                                                }),
                                           ),
                                         );
                                       }
@@ -228,8 +231,10 @@ class _RecordScreenState extends State<RecordScreen>
                                       //   await controller.recordVideo();
                                       UiUtils.vibrate();
                                       setState(() => picked = true);
-
                                       // }
+                                    },
+                                    onBack: () {
+                                      setState(() => picked = false);
                                     },
                                   ),
                                 ),
@@ -271,14 +276,14 @@ class _RecordScreenState extends State<RecordScreen>
                                 endPosition: getCurrentTimerPosition(context),
                               ),
                             )),
-                        // if (picked)
-                        //   Container(
-                        //       width: width,
-                        //       height: height,
-                        //       color: Colors.white.withOpacity(.4),
-                        //       child: Center(
-                        //           child: CircularProgressIndicator(
-                        //               color: GlobalColors.primaryRed)))
+                        if (picked)
+                          Container(
+                              width: width,
+                              height: height,
+                              color: Colors.black.withOpacity(.4),
+                              child: Center(
+                                  child: CircularProgressIndicator(
+                                      color: GlobalColors.primaryRed)))
                       ],
                     ),
                   );

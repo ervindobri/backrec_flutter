@@ -55,6 +55,7 @@ class PlaybackLocalDataSourceImpl implements PlaybackLocalDataSource {
   @override
   Future<VideoPlayerController> initializePlayback(String video) async {
     try {
+      print("Initializing playback for $video");
       controller = VideoPlayerController.file(File(video),
           videoPlayerOptions: VideoPlayerOptions());
       // this.video = video;

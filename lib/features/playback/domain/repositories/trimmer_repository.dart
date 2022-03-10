@@ -8,4 +8,6 @@ abstract class TrimmerRepository {
 
   Future<void> loadVideo(String videoPath);
   Future<void> createClip(Marker marker);
+
+  Future<bool> isVideoTrimmed(String videoPath);
 }

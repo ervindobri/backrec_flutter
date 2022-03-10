@@ -11,8 +11,9 @@ class InitializePlaybackEvent extends PlaybackEvent {
 }
 
 class InitializeThumbnailEvent extends PlaybackEvent {
-  final XFile video;
-  InitializeThumbnailEvent(this.video);
+  final XFile? video;
+  final String? videoPath;
+  InitializeThumbnailEvent({this.video, this.videoPath});
 }
 
 class StartPlaybackEvent extends PlaybackEvent {}
