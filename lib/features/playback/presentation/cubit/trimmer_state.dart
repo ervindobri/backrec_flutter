@@ -8,10 +8,19 @@ abstract class TrimmerState extends Equatable {
 }
 
 class TrimmerInitial extends TrimmerState {}
+
 class TrimmerLoading extends TrimmerState {}
+
 class TrimmerVideoLoaded extends TrimmerState {}
+
 class TrimmerMarkersLoaded extends TrimmerState {}
-class TrimmerTrimming extends TrimmerState {}
+
+class TrimmerTrimming extends TrimmerState {
+  final String message;
+
+  TrimmerTrimming(this.message);
+}
+
 class TrimmerFinished extends TrimmerState {}
 
 class TrimmerError extends TrimmerState {

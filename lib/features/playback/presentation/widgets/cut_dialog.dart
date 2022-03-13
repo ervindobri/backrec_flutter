@@ -10,6 +10,7 @@ import 'package:backrec_flutter/injection_container.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rive/rive.dart';
 
 void openCutDialog(
     BuildContext context, String videoPath, List<Marker> markers) {
@@ -86,23 +87,30 @@ class _CutDialogState extends State<CutDialog> {
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SizedBox(height: 40),
-                      ClipRRect(
-                        borderRadius: GlobalStyles.radiusAll24,
-                        child: LinearProgressIndicator(
-                          minHeight: 10,
-                          value: _value,
-                          backgroundColor: Colors.white,
-                          color: GlobalColors.primaryRed,
-                        ),
-                      ),
-                      Text(text,
-                          style:
-                              context.bodyText1.copyWith(color: Colors.white)),
-                      Spacer(),
+                      // SizedBox(height: 40),
+                      // ClipRRect(
+                      //   borderRadius: GlobalStyles.radiusAll24,
+                      //   child: LinearProgressIndicator(
+                      //     minHeight: 10,
+                      //     value: _value,
+                      //     backgroundColor: Colors.white,
+                      //     color: GlobalColors.primaryRed,
+                      //   ),
+                      // ),
+                      // Text(text,
+                      //     style:
+                      //         context.bodyText1.copyWith(color: Colors.white)),
+                      // Spacer(),
                       if (state is TrimmerFinished) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24.0),
+                          child: Text("Clips saved to application directory!",
+                              textAlign: TextAlign.center,
+                              style: context.bodyText2
+                                  .copyWith(color: Colors.white)),
+                        ),
                         BlurryIconButton(
-                          color: Colors.white,
+                          color: GlobalColors.primaryRed,
                           onPressed: () {
                             NavUtils.back(context);
                             openUploadDialog(context, widget.path);
@@ -110,13 +118,39 @@ class _CutDialogState extends State<CutDialog> {
                           icon: CupertinoIcons.videocam,
                           label: "Select clips",
                         )
+                      ] else if (state is TrimmerTrimming) ...[
+                        Expanded(
+                          child: SizedBox(
+                            // height: 50,
+                            // width: 50,
+                            child: RiveAnimation.asset(
+                              'assets/anims/run-v7.riv',
+                              onInit: (artboard) {},
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24.0),
+                          child: Text(state.message,
+                              textAlign: TextAlign.center,
+                              style: context.bodyText2
+                                  .copyWith(color: Colors.white)),
+                        ),
                       ] else ...[
+                        Spacer(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24.0),
+                          child: Text(
+                              "The video will be cut into small clips according to the markers.",
+                              textAlign: TextAlign.center,
+                              style: context.bodyText2
+                                  .copyWith(color: Colors.white)),
+                        ),
                         TextButton(
                             style: GlobalStyles.buttonStyle(),
                             onPressed: () {
                               context.read<TrimmerCubit>().trimVideo(
                                   video: widget.path, markers: markers);
-
                               setState(() => _value = null);
                             },
                             child: Text("Trim Video",

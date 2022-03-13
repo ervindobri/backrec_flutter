@@ -13,7 +13,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:video_trimmer/video_trimmer.dart';
 
 Future<void> openUploadDialog(BuildContext context, String videoPath) async {
   final trimmerCubit = sl<TrimmerCubit>();
@@ -108,7 +107,6 @@ class _UploadDialogState extends State<UploadDialog> {
                                                   "${widget.directory}/${widget.videoPath.parsedPath}/${marker.id}.mp4")),
                                         child: MarkerTile(
                                             marker: marker,
-                                            isSelected: isSelected,
                                             onTap: () {
                                               setState(() {
                                                 if (isSelected) {

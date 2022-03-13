@@ -5,16 +5,33 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class MarkerTile extends StatelessWidget {
+class MarkerTile extends StatefulWidget {
   final Marker marker;
-  final bool isSelected;
   final VoidCallback onTap;
   const MarkerTile({
     Key? key,
     required this.marker,
     required this.onTap,
-    required this.isSelected,
   }) : super(key: key);
+
+  @override
+  State<MarkerTile> createState() => _MarkerTileState();
+}
+
+class _MarkerTileState extends State<MarkerTile> {
+  bool isSelected = false;
+
+  @override
+  void initState() {
+    print("init");
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    print("changed dep.");
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,9 +39,9 @@ class MarkerTile extends StatelessWidget {
     final height = MediaQuery.of(context).size.height;
     return BlocBuilder<PlaybackBloc, PlaybackState>(
       builder: (context, state) {
-        Widget widget = SizedBox();
+        Widget content = SizedBox();
         if (state is ThumbnailInitialized) {
-          widget = Container(
+          content = Container(
             decoration: BoxDecoration(
               color: Colors.black,
               image: DecorationImage(
@@ -34,21 +51,20 @@ class MarkerTile extends StatelessWidget {
           );
         } else if (state is PlaybackInitializing) {
           //progress bar
-          widget = CircularProgressIndicator(color: Colors.white);
+          content = CircularProgressIndicator(color: Colors.white);
         } else {
-          widget = SizedBox();
+          content = SizedBox();
         }
         return SizedBox(
           width: 100,
           height: 100,
           child: DottedBorder(
-            borderType: isSelected ? BorderType.RRect : BorderType.RRect,
+            borderType: BorderType.RRect,
             radius: Radius.circular(24),
             strokeCap: StrokeCap.square,
             color: isSelected ? GlobalColors.primaryRed : Colors.white,
             strokeWidth: 5,
-            dashPattern: [1],
-            padding: EdgeInsets.zero,
+            dashPattern: isSelected ? [1] : [15, 14],
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Material(
@@ -59,8 +75,11 @@ class MarkerTile extends StatelessWidget {
                 child: InkWell(
                     highlightColor: Colors.transparent,
                     overlayColor: MaterialStateProperty.all(Colors.transparent),
-                    onTap: onTap,
-                    child: widget),
+                    onTap: () {
+                      setState(() => isSelected = !isSelected);
+                      widget.onTap();
+                    },
+                    child: content),
               ),
             ),
           ),

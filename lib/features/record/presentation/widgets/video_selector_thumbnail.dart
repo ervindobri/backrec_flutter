@@ -34,7 +34,6 @@ class VideoSelectorThumbnail extends StatelessWidget {
       child: InkWell(
         onTap: () async {
           try {
-            onTap();
             //Only pick file name so it can be loaded into a video later
             final result = await FilePicker.platform.pickFiles(
                 type: FileType.video,
@@ -42,6 +41,7 @@ class VideoSelectorThumbnail extends StatelessWidget {
                 withData: false,
                 withReadStream: false);
             if (result != null && result.files.isNotEmpty) {
+              onTap();
               PlatformFile video = result.files.first;
               if (video.name != "") {
                 // print(video.path);

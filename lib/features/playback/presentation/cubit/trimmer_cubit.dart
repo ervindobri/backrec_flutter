@@ -18,9 +18,9 @@ class TrimmerCubit extends Cubit<TrimmerState> {
       emit(TrimmerVideoLoaded());
       markers.forEach((marker) async {
         emit(TrimmerMarkersLoaded());
+        emit(TrimmerTrimming("Trimming with id ${marker.id}"));
         await repository.createClip(marker);
         await Future.delayed(Duration(milliseconds: 900));
-        emit(TrimmerTrimming());
       });
       await Future.delayed(Duration(milliseconds: 1800));
       emit(TrimmerFinished());

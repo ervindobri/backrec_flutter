@@ -13,7 +13,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  #UI
   dotted_border: ^2.0.0+2
+  rive: ^0.8.1
+
+  #State management & architecture
   bloc: ^8.0.2
   flutter_bloc: ^8.0.1
   get_it: ^7.2.0
@@ -66,8 +70,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+    - assets/anims/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
